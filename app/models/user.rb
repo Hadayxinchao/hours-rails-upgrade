@@ -54,7 +54,7 @@ class User < ApplicationRecord
   has_many :mileages
   has_many :projects, -> { distinct }, through: :hours
 
-  scope :by_name, -> { order("lower(last_name)") }
+  scope :by_name, -> { order(Arel.sql("lower(last_name)")) }
 
   def full_name
     "#{first_name} #{last_name}"

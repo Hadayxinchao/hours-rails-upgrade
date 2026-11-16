@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-ruby "2.4.2"
+ruby "2.6.10"
 
 gem "airbrake"
 gem "apartment"
@@ -31,10 +31,7 @@ gem "paperclip", "~> 6.1.0"
 gem "pg"
 gem "pikaday-gem", "~> 1.2.0.0"
 gem "rack-timeout"
-gem "rails", "~> 5.1.0"
-# Temporary: newer loofah needs nokogiri >= 1.12 (Ruby >= 2.5). Drop after the Ruby upgrade.
-gem "loofah", "~> 2.19.1"
-gem "rails-html-sanitizer", "~> 1.4.4"
+gem "rails", "~> 5.2.0"
 gem "recipient_interceptor"
 gem "redcarpet"
 gem "sass-rails", "~> 5.0.1"

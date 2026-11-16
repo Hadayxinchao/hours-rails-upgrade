@@ -5,7 +5,7 @@ A documented, step-by-step upgrade of a real, abandoned Rails SaaS app: from **R
 > Fork of [DefactoSoftware/Hours](https://github.com/DefactoSoftware/Hours) (MIT), a multi-tenant time-tracking app: accounts on subdomains, clients, projects, hours, mileage, reports, CSV export, billing and invitations. Last upstream commit: June 2020.
 > The upgrade work, tooling and case study in this repository are by [Bui Hoang Ha](https://portfolio.hadayxinchao.com/).
 
-**Status:** 🚧 In progress, at **Rails 5.1.7** (hop 1 of 7). See [Progress](#progress).
+**Status:** 🚧 In progress, at **Rails 5.2.8 / Ruby 2.6** (hop 2 of 7). See [Progress](#progress).
 
 ---
 
@@ -45,7 +45,7 @@ Full plan: [`docs/case-study/UPGRADE_PLAN.md`](docs/case-study/UPGRADE_PLAN.md)
 |---|---|---|---|
 | 0. Reproducible baseline | [`hop/0-baseline`](../../tree/hop/0-baseline) | ✅ | Docker env, benchmark, audit; unblocked the yanked gem |
 | 1. Rails 5.0 → 5.1 | [`hop/1-rails-5.1`](../../tree/hop/1-rails-5.1) | ✅ | Found an association-order bug that breaks Reports/CSV on 5.1+ |
-| 2. Rails 5.1 → 5.2, Ruby 2.6 | | ⏳ | Credentials, `apartment` deprecations |
+| 2. Rails 5.1 → 5.2, Ruby 2.4 → 2.6 | [`hop/2-rails-5.2`](../../tree/hop/2-rails-5.2) | ✅ | Security patch broke audit logging (89 failing specs); fixed a report-filter bug present since 2020 |
 | 3. Rails 6.0 / 6.1, Ruby 2.7 → 3.0 | | ⏳ | Zeitwerk, Paperclip → Active Storage, Ruby 3 kwargs |
 | 4. Rails 7.0 → 7.2, Ruby 3.3 | | ⏳ | Propshaft + importmap, CoffeeScript → JS, Puma |
 | 5. Rails 8.x, Ruby 3.4 | | ⏳ | Solid Queue, Solid Cache, GitHub Actions CI |
@@ -57,9 +57,9 @@ Every finding along the way is logged in [`docs/case-study/UPGRADE_LOG.md`](docs
 
 | Metric | Before | After |
 |---|---:|---:|
-| Known vulnerabilities | 167 | – |
+| Known vulnerabilities | 167 | 138 (on 5.2) |
 | Brakeman warnings | 8 | – |
-| Specs passing | 280 / 280 | 280 / 280 (on 5.1) |
+| Specs passing | 280 / 280 | 280 / 280 (on 5.2) |
 | Reports CSV export p50 | 34,657 ms | – |
 | Billables p50 | 2,793 ms | – |
 | Dashboard p50 | 548 ms | – |
@@ -72,7 +72,7 @@ Baseline details: [`docs/case-study/BASELINE.md`](docs/case-study/BASELINE.md)
 Requires Docker. The app uses subdomains for accounts, so open it on `acme.localhost`.
 
 ```bash
-cd docker/legacy
+cd docker/app                     # current upgrade state (docker/legacy = original Ruby 2.4 environment)
 docker compose build app
 docker compose up -d web          # seeds a demo tenant on first start
 ```
@@ -84,14 +84,15 @@ docker compose run --rm app bash -c "bundle exec rake db:create db:schema:load &
 docker compose run --rm bench                                                                          # benchmark → JSON
 ```
 
-To compare with the original code, check out `hop/0-baseline` and rebuild.
+To compare with the original code, check out `hop/0-baseline` and use `docker/legacy`.
 
 ## Repository layout
 
 | Path | What |
 |---|---|
 | [`docs/case-study/`](docs/case-study) | Plan, baseline, upgrade log, raw audit/benchmark output |
-| [`docker/legacy/`](docker/legacy) | Reproducible Ruby 2.4 environment (app, tests, benchmark, web) |
+| [`docker/app/`](docker/app) | Current upgrade-target environment (app, tests, benchmark, web) |
+| [`docker/legacy/`](docker/legacy) | Frozen original Ruby 2.4 environment used for the baseline |
 | [`script/benchmark/`](script/benchmark) | Deterministic seed data + request benchmark |
 | [`docs/ORIGINAL_README.md`](docs/ORIGINAL_README.md) | The upstream project's README |
 

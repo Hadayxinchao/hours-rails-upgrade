@@ -36,6 +36,9 @@ feature "User Report" do
 
       expect(page).to have_content(entry1.description)
       expect(page).to_not have_content(entry2.description)
+      # The filter form keeps the chosen value after submitting.
+      expect(page).to have_select("entry_filter_billable",
+                                  selected: I18n.t("entry_filters.billable"))
     end
   end
 end

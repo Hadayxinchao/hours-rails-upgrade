@@ -18,7 +18,7 @@
 class Client < ApplicationRecord
   validates :name, presence: true,
                    uniqueness: { case_sensitive: false }
-  scope :by_name, -> { order("lower(name)") }
+  scope :by_name, -> { order(Arel.sql("lower(name)")) }
   scope :by_last_updated, -> { order("clients.updated_at DESC") }
   has_many :projects
 

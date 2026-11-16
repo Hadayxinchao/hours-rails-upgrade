@@ -32,7 +32,7 @@ class Project < ApplicationRecord
   belongs_to :client, touch: true
 
   scope :by_last_updated, -> { order("projects.updated_at DESC") }
-  scope :by_name, -> { order("lower(name)") }
+  scope :by_name, -> { order(Arel.sql("lower(name)")) }
 
   scope :are_archived, -> { where(archived: true) }
   scope :unarchived, -> { where(archived: false) }

@@ -57,7 +57,7 @@ Hours::Application.configure do
   # Use a different cache store in production.
   if ENV["PERFORM_CACHING"]
     config.action_controller.perform_caching = true
-    config.cache_store = :dalli_store
+    config.cache_store = :mem_cache_store
   else
     config.action_controller.perform_caching = false
   end

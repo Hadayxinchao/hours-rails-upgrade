@@ -33,6 +33,6 @@ class ReportsController < ApplicationController
   end
 
   def entry_filter_params
-    params.permit(:entry_filter).permit(*EntryFilter::KEYS)
+    params.fetch(:entry_filter, {}).permit(*EntryFilter::KEYS)
   end
 end

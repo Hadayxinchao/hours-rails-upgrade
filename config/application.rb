@@ -18,6 +18,14 @@ module Hours
 
     config.active_record.default_timezone = :utc
 
+    # Rails 5.2.8.1+ (CVE-2022-32224) safe-loads YAML columns. `audited`
+    # stores changes as YAML, so allow the value types it writes.
+    config.active_record.yaml_column_permitted_classes = [
+      Date, Time, Symbol, BigDecimal,
+      ActiveSupport::TimeWithZone, ActiveSupport::TimeZone,
+      ActiveSupport::HashWithIndifferentAccess
+    ]
+
     config.generators do |generate|
       generate.helper false
       generate.javascript_engine false

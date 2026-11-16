@@ -24,7 +24,7 @@ module ApplicationHelper
   def client_title(client)
     html = ""
     html << if client.logo_url != ""
-              image_tag(client.logo_url, class: "logo")
+              image_tag(client.logo_url, class: "logo", alt: "Logo")
             else
               content_tag(
                 :span,
