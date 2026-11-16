@@ -20,8 +20,8 @@ class Tag < ApplicationRecord
 
   has_many :taggings
   has_many :hours, through: :taggings
-  has_many :projects, -> { uniq }, through: :hours
-  has_many :users, -> { uniq }, through: :hours
+  has_many :projects, -> { distinct }, through: :hours
+  has_many :users, -> { distinct }, through: :hours
   belongs_to :project
 
   def self.list

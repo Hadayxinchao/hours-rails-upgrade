@@ -11,8 +11,9 @@ class Entry < ApplicationRecord
 
   audited allow_mass_assignment: true
 
-  has_one :client, through: :project
-
   belongs_to :user, touch: true
   belongs_to :project, touch: true
+
+  # Must come after belongs_to :project (Rails 5.1+ HasManyThroughOrderError).
+  has_one :client, through: :project
 end
