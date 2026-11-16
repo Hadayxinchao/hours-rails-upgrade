@@ -17,8 +17,8 @@ module Hours
     require "hours"
     require "time_series_initializer"
 
-    config.autoloader = :zeitwerk
     config.active_record.default_timezone = :utc
+    config.active_record.legacy_connection_handling = false
 
     # Rails 5.2.8.1+ (CVE-2022-32224) safe-loads YAML columns. `audited`
     # stores changes as YAML, so allow the value types it writes.
