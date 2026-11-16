@@ -1,0 +1,33 @@
+name: hours-legacy
+services:
+  db:
+    image: postgres:9.6-alpine
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+  app:
+    build:
+      context: ../..
+      dockerfile: docker/legacy/Dockerfile
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_USER: postgres
+      RAILS_ENV: test
+    depends_on: [db]
+  bench:
+    image: hours-legacy-app
+    environment:
+      RAILS_ENV: production
+      DATABASE_URL: postgres://postgres@db/hours_bench
+      SECRET_KEY_BASE: benchmark-only-secret-0123456789abcdef0123456789abcdef
+      SMTP_ADDRESS: localhost
+      SMTP_DOMAIN: hours.test
+      SMTP_USERNAME: bench
+      SMTP_PASSWORD: bench
+      NEW_RELIC_FRAMEWORK: ruby
+      NEW_RELIC_AGENT_ENABLED: "false"
+    depends_on: [db]
+    command: >
+      bash -c "bundle exec rake db:create db:schema:load DISABLE_DATABASE_ENVIRONMENT_CHECK=1 >/dev/null &&
+               bundle exec rails runner script/benchmark/seed.rb >&2 &&
+               bundle exec rake assets:precompile >/dev/null 2>&1 &&
+               bundle exec rails runner script/benchmark/run.rb"
