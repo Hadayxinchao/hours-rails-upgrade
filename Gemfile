@@ -1,8 +1,8 @@
 source "https://rubygems.org"
 
-ruby "2.7.8"
+ruby "3.0.7"
 
-gem "ros-apartment", "~> 2.11", require: "apartment"
+gem "ros-apartment", "~> 3.1", require: "apartment"
 gem "audited"
 gem "aws-sdk-s3", require: false
 gem "bitters"
@@ -14,7 +14,6 @@ gem "devise", "~> 4.9"
 gem "devise_invitable"
 gem "email_validator"
 gem "flutie"
-gem "gravatar_image_tag"
 gem "haml-rails"
 gem "hashtel", "~> 0.0.2"
 gem "high_voltage"
@@ -42,7 +41,7 @@ gem "sprockets", "< 4"
 gem "title"
 gem "twitter-text" # hashtag parsing
 gem "uglifier"
-gem "unicorn"
+gem "puma", "~> 6.4"
 
 source "https://rails-assets.org" do
   gem "rails-assets-chartjs", "~> 1.0.1" # Chart.js 1.x API; replaced in the Rails 7 hop

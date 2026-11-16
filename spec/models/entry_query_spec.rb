@@ -42,6 +42,22 @@ describe EntryQuery do
       expect(mileages_filter(archived: true).count).to eq(1)
     end
 
+    it "ignores keys that are not whitelisted filters" do
+      # Before the fix, entry_filter[delete_by]=1=1 in a URL ran
+      # Hour.delete_by("1=1") and wiped every entry in the account.
+      expect { hours_filter(delete_by: "1=1") }.not_to change(Hour, :count)
+      expect { hours_filter(update_all: "value = 0") }
+        .not_to(change { Hour.order(:id).pluck(:value) })
+      expect(hours_filter(delete_by: "1=1").count).to eq(Hour.count)
+    end
+
+    it "does not leak the entry type between queries (thread safety)" do
+      hours = EntryQuery.new(Hour.all, { from_date: 30.days.ago.to_date }, "hours")
+      EntryQuery.new(Mileage.all, {}, "mileages")
+
+      expect(hours.filter.to_sql).to include('"hours"."date" >=')
+    end
+
     it "filters on all params" do
       expect(hours_filter(
         billed: hour.billed,

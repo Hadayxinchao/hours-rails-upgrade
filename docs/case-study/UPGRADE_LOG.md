@@ -83,3 +83,56 @@ Three commits: Ruby 2.7 on Rails 5.2, then Rails 6.0 with Zeitwerk, then the Pap
 
 Result: **289 examples, 0 failures, 0 deprecation warnings**, `zeitwerk:check` clean.
 Known vulnerabilities: 138 → **99** (critical 3 → 1, high 25 → 9).
+
+## Hop 3b: Rails 6.1.7 + Ruby 3.0.7 + Puma (tag `hop/3b-rails-6.1`)
+
+### Rails 6.0 → 6.1
+
+| Finding | Fix |
+|---|---|
+| Rails 6.1 needs `pg ~> 1.1`; app had pg 0.18 | pg 1.6 |
+| `add_template_helper` removed: **every mailer (signup, invitations) raised** | `helper EmailHelper` |
+| `ActiveModel::Errors` became objects: `each { |attr, msg| }`, `errors[:x] <<`, `errors.keys` | `error.attribute/message`, `errors.add`, `attribute_names` |
+| Active Storage 6.1 schema | `service_name` + variant records migrations |
+| `airbrake` and `newrelic_rpm` had **no configuration files**: they never reported anything, and New Relic 3.9 crashed production boot | Removed; error tracking/APM is a deployment decision (Sentry, current New Relic, …) |
+| `rails_12factor` obsolete | `RAILS_LOG_TO_STDOUT` logger in production |
+
+### Ruby 2.7 → 3.0
+
+| Finding | Impact | Fix |
+|---|---|---|
+| `gravatar_image_tag` (last release 2014) calls `URI.escape`, removed in Ruby 3 | **91 specs failed: every page with an avatar raised** | 15-line `AvatarHelper` with specs; keeps the old `d=blank` default so the coloured initials still show |
+| `CSV.generate(options)`: positional hash vs keyword args in Ruby 3 | **CSV export broken** | `CSV.generate(**options)` |
+| `binding_of_caller`, `debug_inspector`, `capybara` native/kwargs issues | Bundle would not install | Updated (dev/test only) |
+| `ros-apartment` 3.x needs Ruby ≥ 3.0 | Was stuck on 2.11 | ros-apartment 3.1 |
+| WEBrick no longer ships with Ruby 3 | `rails server` had no server | Puma (see below) |
+
+### 🔴 Critical: any signed-in user could delete or rewrite all of an account's data with one GET request
+
+`EntryQuery#filter` took each key of `params[:entry_filter]` and called it as a method on the `Hour`/`Mileage` relation (`public_send(filter, value)`). The keys came straight from the URL:
+
+```
+GET /reports?entry_filter[delete_by]=1=1          → Hour.delete_by("1=1")
+GET /reports?entry_filter[update_all]=value=0     → Hour.update_all("value=0")
+```
+
+The 2020 code shipped with this, and **Brakeman did not flag it**. Confirmed with a regression spec (hours count went from 2 to 0 before the fix). Fixed in three layers:
+1. `EntryQuery` only applies keys in `EntryFilter::KEYS` (8 known filters).
+2. `ReportsController` passes permitted params (`entry_filter_params`) instead of raw `params[:entry_filter]`.
+3. Filter scopes use hash/Arel conditions instead of string SQL.
+
+Verified on the running app: the exploit URL no longer changes data (20,000 hours before and after).
+
+### Thread safety → Unicorn to Puma
+
+`EntryQuery::Scopes.set(entry_type)` stored the table name in module-level state, which is a race condition under a threaded server. Replaced with the relation's own `arel_table`, with a spec. With that fixed, **Unicorn → Puma** (`Procfile`, `config/puma.rb`).
+
+### Other security fixes
+
+- `cookies_serializer :marshal` (Brakeman: possible RCE) → `:hybrid`, which migrates existing cookies to JSON. Switch to `:json` in a later hop.
+- `EntryStats` string-built SQL → explicit column map.
+
+Result: **294 examples, 0 failures, 0 deprecation warnings, 0 Ruby warnings**.
+Brakeman: 8 → **3** (remaining: EOL Ruby/Rails, `:hybrid` cookies).
+Known vulnerabilities: 99 → **93**. Gems: 171 → **163**.
+Note: the repo-root `Dockerfile` and `docker-compose.yml` are the upstream 2020 files (Ruby 2.4, Unicorn). They are replaced in the Rails 8 hop by a production Dockerfile.

@@ -5,9 +5,9 @@ class ReportsController < ApplicationController
 
   def index
     @filters = EntryFilter.new(entry_filter_params)
-    @hours_entries = entries(Hour.query(params[:entry_filter]))
+    @hours_entries = entries(Hour.query(entry_filter_params))
                      .page(params[:hours_pages]).per(20)
-    @mileages_entries = entries(Mileage.query(params[:entry_filter]))
+    @mileages_entries = entries(Mileage.query(entry_filter_params))
                         .page(params[:mileages_pages]).per(20)
 
     respond_to do |format|
@@ -15,8 +15,8 @@ class ReportsController < ApplicationController
       format.csv do
         send_csv(
           name: current_subdomain,
-          hours_entries: entries(Hour.query(params[:entry_filter])),
-          mileages_entries: entries(Mileage.query(params[:entry_filter]))
+          hours_entries: entries(Hour.query(entry_filter_params)),
+          mileages_entries: entries(Mileage.query(entry_filter_params))
         )
       end
     end

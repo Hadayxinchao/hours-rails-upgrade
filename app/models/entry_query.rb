@@ -1,18 +1,21 @@
 # frozen_string_literal: true
 
 class EntryQuery
-  def initialize(entries, params, entry_type)
+  # Only these keys may be applied. The keys come straight from URL params,
+  # so they must never be used to pick an arbitrary method to call.
+  FILTERS = EntryFilter::KEYS
+
+  # entry_type is kept for API compatibility; the table name now comes from
+  # the relation itself instead of module-level (thread-unsafe) state.
+  def initialize(entries, params, _entry_type = nil)
     @entries = entries.extending(Scopes)
-    Scopes.set(entry_type)
     @params = params
   end
 
   def filter
-    result = entries
-    filter_params.each do |filter, value|
-      result = result.public_send(filter, value) if present?(value)
+    filter_params.reduce(entries) do |result, (filter, value)|
+      present?(value) ? result.public_send(filter, value) : result
     end
-    result
   end
 
   private
@@ -20,7 +23,10 @@ class EntryQuery
   attr_reader :entries, :params
 
   def filter_params
-    params&.reject { |_, v| v.nil? } || {}
+    return {} unless params
+
+    hash = params.respond_to?(:permit) ? params.permit(*FILTERS).to_h : params.to_h
+    hash.symbolize_keys.slice(*FILTERS).compact
   end
 
   def present?(value)
@@ -29,7 +35,7 @@ class EntryQuery
 
   module Scopes
     def client_id(param)
-      joins(:project).where("client_id = ?", param)
+      joins(:project).where(projects: { client_id: param })
     end
 
     def project_id(param)
@@ -45,27 +51,19 @@ class EntryQuery
     end
 
     def from_date(param)
-      where("#{Scopes.get}.date >= ?", Date.parse(param.to_s))
+      where(arel_table[:date].gteq(Date.parse(param.to_s)))
     end
 
     def to_date(param)
-      where("#{Scopes.get}.date <= ?", Date.parse(param.to_s))
+      where(arel_table[:date].lteq(Date.parse(param.to_s)))
     end
 
     def archived(param)
-      joins(:project).where("archived = ?", param)
+      joins(:project).where(projects: { archived: param })
     end
 
     def billable(param)
-      joins(:project).where("billable = ?", param)
-    end
-
-    def self.set(entry_type)
-      @entry_type = entry_type
-    end
-
-    def self.get
-      @entry_type
+      joins(:project).where(projects: { billable: param })
     end
   end
 end

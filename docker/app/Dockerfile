@@ -1,5 +1,5 @@
 # Current upgrade-target environment. RUBY_IMAGE moves forward with each hop.
-ARG RUBY_IMAGE=ruby:2.7.8-bullseye
+ARG RUBY_IMAGE=ruby:3.0.7-bullseye
 FROM ${RUBY_IMAGE}
 
 # Debian bullseye security updates have moved to archive.debian.org.

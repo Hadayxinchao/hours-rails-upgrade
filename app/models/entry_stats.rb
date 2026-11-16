@@ -1,4 +1,10 @@
 class EntryStats
+  SUBJECT_COLUMNS = {
+    "User" => :user_id,
+    "Project" => :project_id,
+    "Category" => :category_id
+  }.freeze
+
   def initialize(entries, subject = nil)
     @entries = entries
     @subject = subject
@@ -34,7 +40,7 @@ class EntryStats
     if @subject.instance_of?(RemainingCategory)
       @entries.where("category_id in (?)", @subject.ids)
     else
-      @entries.where("#{@subject.class.name.downcase}_id = (?)", @subject.id)
+      @entries.where(SUBJECT_COLUMNS.fetch(@subject.class.name) => @subject.id)
     end
   end
 end

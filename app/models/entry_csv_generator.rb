@@ -11,7 +11,7 @@ class EntryCSVGenerator
   end
 
   def generate
-    CSV.generate(options) do |csv|
+    CSV.generate(**options) do |csv|
       csv << []
       csv << [I18n.translate("report.headers.hours")]
       fill_fields("hours", csv)
@@ -28,7 +28,7 @@ class EntryCSVGenerator
       }
     end
 
-    CSV::DEFAULT_OPTIONS
+    { col_sep: "," }
   end
 
   def get_fields(entry, entry_type)

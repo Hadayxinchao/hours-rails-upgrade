@@ -5,7 +5,7 @@ A documented, step-by-step upgrade of a real, abandoned Rails SaaS app: from **R
 > Fork of [DefactoSoftware/Hours](https://github.com/DefactoSoftware/Hours) (MIT), a multi-tenant time-tracking app: accounts on subdomains, clients, projects, hours, mileage, reports, CSV export, billing and invitations. Last upstream commit: June 2020.
 > The upgrade work, tooling and case study in this repository are by [Bui Hoang Ha](https://portfolio.hadayxinchao.com/).
 
-**Status:** 🚧 In progress, at **Rails 6.0.6 / Ruby 2.7** (hop 3 of 7). See [Progress](#progress).
+**Status:** 🚧 In progress, at **Rails 6.1.7 / Ruby 3.0** (hop 3b of 7). See [Progress](#progress).
 
 ---
 
@@ -21,6 +21,8 @@ This is what a typical "please upgrade our Rails app" client codebase looks like
 | Fresh install | ❌ Fails: `mimemagic 0.3.2` was yanked from RubyGems |
 | Production boot | ❌ Crashes: `newrelic_rpm 3.9` rejects Rails 5.0 |
 | Framework defaults | Still Rails **4.2** behaviour (every 5.0 default switched off) |
+| Data safety | 🔴 Any signed-in user could delete all of an account's entries with one GET request (found during the upgrade) |
+| Business logic | "Download CSV" ignored report filters and always exported everything |
 | CI | Travis CI, no longer usable |
 | Slowest page: Reports CSV export | **34.7 s** p50 for 23k rows |
 | Billables page | **2.8 s** p50 (N+1 queries) |
@@ -47,7 +49,7 @@ Full plan: [`docs/case-study/UPGRADE_PLAN.md`](docs/case-study/UPGRADE_PLAN.md)
 | 1. Rails 5.0 → 5.1 | [`hop/1-rails-5.1`](../../tree/hop/1-rails-5.1) | ✅ | Found an association-order bug that breaks Reports/CSV on 5.1+ |
 | 2. Rails 5.1 → 5.2, Ruby 2.4 → 2.6 | [`hop/2-rails-5.2`](../../tree/hop/2-rails-5.2) | ✅ | Security patch broke audit logging (89 failing specs); fixed a report-filter bug present since 2020 |
 | 3. Rails 6.0, Ruby 2.7, Active Storage | [`hop/3-rails-6.0`](../../tree/hop/3-rails-6.0) | ✅ | Zeitwerk; Paperclip → Active Storage with a tenant-aware data migration; fixed CSV export ignoring filters |
-| 3b. Rails 6.1, Ruby 3.0 | | ⏳ | Ruby 3 keyword arguments |
+| 3b. Rails 6.1, Ruby 3.0, Puma | [`hop/3b-rails-6.1`](../../tree/hop/3b-rails-6.1) | ✅ | **Found and fixed a critical bug: any user could wipe an account's data via one URL**; Unicorn → Puma |
 | 4. Rails 7.0 → 7.2, Ruby 3.3 | | ⏳ | Propshaft + importmap, CoffeeScript → JS, Puma |
 | 5. Rails 8.x, Ruby 3.4 | | ⏳ | Solid Queue, Solid Cache, GitHub Actions CI |
 | 6. Performance + security pass | | ⏳ | CSV streaming, N+1 fixes, 0 known vulnerabilities |
@@ -58,14 +60,14 @@ Every finding along the way is logged in [`docs/case-study/UPGRADE_LOG.md`](docs
 
 | Metric | Before | After |
 |---|---:|---:|
-| Known vulnerabilities | 167 | 99 (on 6.0) |
-| Brakeman warnings | 8 | – |
-| Specs passing | 280 / 280 | 289 / 289 (on 6.0) |
+| Known vulnerabilities | 167 | 93 (on 6.1) |
+| Brakeman warnings | 8 (+1 critical it missed) | 3 (on 6.1) |
+| Specs passing | 280 / 280 | 294 / 294 (on 6.1) |
 | Reports CSV export p50 | 34,657 ms | – |
 | Billables p50 | 2,793 ms | – |
 | Dashboard p50 | 548 ms | – |
 | Process memory | 887 MB | – |
-| Locked gems | 290 | 171 (on 6.0) |
+| Locked gems | 290 | 163 (on 6.1) |
 
 Baseline details: [`docs/case-study/BASELINE.md`](docs/case-study/BASELINE.md)
 
