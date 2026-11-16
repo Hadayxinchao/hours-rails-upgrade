@@ -1,121 +1,105 @@
-Hours
-=====
+# Hours: Legacy Rails Rescue (Rails 5.0 → 8)
 
-[![Build Status](https://travis-ci.org/DefactoSoftware/Hours.svg?branch=master)](https://travis-ci.org/DefactoSoftware/Hours)
-[![Code Climate](https://codeclimate.com/github/DefactoSoftware/Hours/badges/gpa.svg)](https://codeclimate.com/github/DefactoSoftware/Hours)
-[![Reviewed by Hound](https://img.shields.io/badge/Reviewed_by-Hound-8E64B0.svg)](https://houndci.com)
+A documented, step-by-step upgrade of a real, abandoned Rails SaaS app: from **Ruby 2.4 / Rails 5.0 (both end-of-life)** to a current, secure, faster Rails 8 stack. Every step is measured, tested and tagged.
 
-[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/DefactoSoftware/Hours)
+> Fork of [DefactoSoftware/Hours](https://github.com/DefactoSoftware/Hours) (MIT), a multi-tenant time-tracking app: accounts on subdomains, clients, projects, hours, mileage, reports, CSV export, billing and invitations. Last upstream commit: June 2020.
+> The upgrade work, tooling and case study in this repository are by [Bui Hoang Ha](https://portfolio.hadayxinchao.com/).
 
+**Status:** 🚧 In progress, at **Rails 5.1.7** (hop 1 of 7). See [Progress](#progress).
 
-Maintenance mode
-----------------
+---
 
-This project is now in maintenance mode. We will not accept new feature
-development or contributions other than dependency updates, security fixes and
-major bug fixes.
+## The problem
 
-Hours is a dead simple project based time tracking application that we use
-for internal time-tracking. It allows users to register how many hours they've
-worked on a project with a certain category (think `design`, `software development`,
-`testing` for software teams) and add any tag they like to it. This gives us a lot of
-insight on how we spend our time on different projects.
+This is what a typical "please upgrade our Rails app" client codebase looks like:
 
-It looks like this:
+| | Before (measured) |
+|---|---|
+| Runtime | Ruby 2.4.2 (EOL 2020), Rails 5.0.7 (EOL 2018) |
+| Known gem vulnerabilities | **167 advisories in 26 gems** (4 critical, 43 high) |
+| Static security scan (Brakeman) | 8 warnings, including SQL injection ×3 and RCE ×1 |
+| Fresh install | ❌ Fails: `mimemagic 0.3.2` was yanked from RubyGems |
+| Production boot | ❌ Crashes: `newrelic_rpm 3.9` rejects Rails 5.0 |
+| Framework defaults | Still Rails **4.2** behaviour (every 5.0 default switched off) |
+| CI | Travis CI, no longer usable |
+| Slowest page: Reports CSV export | **34.7 s** p50 for 23k rows |
+| Billables page | **2.8 s** p50 (N+1 queries) |
+| Memory (single process) | 887 MB RSS |
 
-<img src="http://i.imgur.com/UGotYJu.png" width=500 alt="Projects overview" />
+The good news is a real safety net: **280 specs, 99.3% line coverage**.
 
-<img src="http://i.imgur.com/SZd6Oaw.png" width=500 alt="Single project" />
+## Approach
 
-<img src="http://i.imgur.com/gJxWWnc.png" width=500 alt="Entries" />
+1. **Reproduce first.** Freeze the original environment in Docker ([`docker/legacy`](docker/legacy)) so "before" numbers are real, not guessed.
+2. **Measure.** Security audit, test suite, and a [version-agnostic benchmark](script/benchmark): the same seed data (20k hour entries) and the same 9 pages, timed through the full Rack stack in production mode, on every Rails version.
+3. **Upgrade one minor version at a time.** Bump → `rails app:update` → keep app-specific config → fix deprecations → specs green → tag.
+4. **Replace dead dependencies** (Paperclip, CoffeeScript/Sprockets, Unicorn, Delayed Job, Memcached, Travis) with their Rails 8 equivalents.
+5. **Performance pass** after the upgrade: fix N+1s, add indexes, stream the CSV export.
+6. **Publish before/after numbers** with the same scripts.
 
-<img src="http://i.imgur.com/QfMsVjb.png" width=500 alt="Audit Log" />
+Full plan: [`docs/case-study/UPGRADE_PLAN.md`](docs/case-study/UPGRADE_PLAN.md)
 
-<img src="http://i.imgur.com/y4RLCEg.png" width=500 alt="Entry" />
+## Progress
 
+| Hop | Tag | Status | Highlights |
+|---|---|---|---|
+| 0. Reproducible baseline | [`hop/0-baseline`](../../tree/hop/0-baseline) | ✅ | Docker env, benchmark, audit; unblocked the yanked gem |
+| 1. Rails 5.0 → 5.1 | [`hop/1-rails-5.1`](../../tree/hop/1-rails-5.1) | ✅ | Found an association-order bug that breaks Reports/CSV on 5.1+ |
+| 2. Rails 5.1 → 5.2, Ruby 2.6 | | ⏳ | Credentials, `apartment` deprecations |
+| 3. Rails 6.0 / 6.1, Ruby 2.7 → 3.0 | | ⏳ | Zeitwerk, Paperclip → Active Storage, Ruby 3 kwargs |
+| 4. Rails 7.0 → 7.2, Ruby 3.3 | | ⏳ | Propshaft + importmap, CoffeeScript → JS, Puma |
+| 5. Rails 8.x, Ruby 3.4 | | ⏳ | Solid Queue, Solid Cache, GitHub Actions CI |
+| 6. Performance + security pass | | ⏳ | CSV streaming, N+1 fixes, 0 known vulnerabilities |
 
+Every finding along the way is logged in [`docs/case-study/UPGRADE_LOG.md`](docs/case-study/UPGRADE_LOG.md).
 
+### Results (filled in as hops land)
 
-Roadmap
--------
+| Metric | Before | After |
+|---|---:|---:|
+| Known vulnerabilities | 167 | – |
+| Brakeman warnings | 8 | – |
+| Specs passing | 280 / 280 | 280 / 280 (on 5.1) |
+| Reports CSV export p50 | 34,657 ms | – |
+| Billables p50 | 2,793 ms | – |
+| Dashboard p50 | 548 ms | – |
+| Process memory | 887 MB | – |
 
-As we're using Hours we're constantly thinking of ways to improve it and we'd love to hear your thoughts!
+Baseline details: [`docs/case-study/BASELINE.md`](docs/case-study/BASELINE.md)
 
-System Dependencies
--------------------
+## Run it yourself
 
-- Ruby 2.4.2 (install with [rbenv](https://github.com/sstephenson/rbenv))
-- Rubygems
-- Bundler (`gem install bundler`)
-- PostgreSQL
-- qmake (`brew install qt`) or read extensive instructions [here](https://github.com/thoughtbot/capybara-webkit/wiki/Installing-Qt-and-compiling-capybara-webkit)
-- memcached (`brew install memcached`, an older version ships with OSX)(optional)
-- imagemagick (`brew install imagemagick`)
+Requires Docker. The app uses subdomains for accounts, so open it on `acme.localhost`.
 
-Getting Started
----------------
+```bash
+cd docker/legacy
+docker compose build app
+docker compose up -d web          # seeds a demo tenant on first start
+```
 
-This repository comes equipped with a self-setup script:
+Open http://acme.localhost:3000 and sign in as `user1@acme.test` / `benchmark-password`.
 
-    % ./bin/setup
+```bash
+docker compose run --rm app bash -c "bundle exec rake db:create db:schema:load && bundle exec rspec"   # test suite
+docker compose run --rm bench                                                                          # benchmark → JSON
+```
 
-After setting up, you can run the application using [foreman]:
+To compare with the original code, check out `hop/0-baseline` and rebuild.
 
-    % foreman start
+## Repository layout
 
-Since we're using subdomains to point to accounts, you can't run the app on localhost.
-If you have [pow] set up or if you use linux an alternative is [prax], it will be automatically configured by the setup script, otherwise
-you need to point apache/nginx to the port foreman is running the app on (7000 by default). With pow/prax the app will run on http://hours.dev
+| Path | What |
+|---|---|
+| [`docs/case-study/`](docs/case-study) | Plan, baseline, upgrade log, raw audit/benchmark output |
+| [`docker/legacy/`](docker/legacy) | Reproducible Ruby 2.4 environment (app, tests, benchmark, web) |
+| [`script/benchmark/`](script/benchmark) | Deterministic seed data + request benchmark |
+| [`docs/ORIGINAL_README.md`](docs/ORIGINAL_README.md) | The upstream project's README |
 
-In order to activate caching in development you can add `CACHE_DEVELOPMENT="anything"` to your `.env`. Make sure to run `$ memcached` when you do need this.
+## Need this for your app?
 
-[foreman]: http://ddollar.github.io/foreman/
-[pow]: http://pow.cx
-[prax]: http://ysbaddaden.github.io/prax/
+I upgrade and stabilise legacy Rails and Django applications: audit, upgrade plan, version-by-version upgrade with green tests, performance fixes, and CI/CD with Docker on AWS.
+[Portfolio](https://portfolio.hadayxinchao.com/) · [LinkedIn](https://www.linkedin.com/in/hadayxinchao/)
 
-Getting Started with Docker
----------------------------
+## License
 
-This repository comes equipped to be run within Docker, but this requires a few more local dependencies. For instructions on installing and getting started with Docker go [here](https://www.docker.com/products/docker). You'll also need [`docker-compose`](https://docs.docker.com/compose/overview/), but it will be installed for you through Docker for Mac or Windows.
-
-This repository comes equipped with a self-setup script for using Docker:
-
-    % ./bin/docker_setup
-
-On first boot you'll also need to create your database, for that use:
-
-    % docker-compose run --rm app rake db:create db:migrate
-
-After setting up, you can run the application and dependencies using [docker-compose]:
-
-    % docker-compose up -d
-
-If your Docker host is running on `localhost` then you should be able to use pow/prax, otherwise you'll need to connect to it via:
-
-    http://DOCKER_IP:7000
-
-Feature Flags
--------------
-
-Description:
-
-Single Tenant Mode: Initialize application in single tenant mode. Disabled by default.
-
-Usage:
-
-To use the single tenant mode, you can add SINGLE_TENANT_MODE to your enviroment variables with the value `true`. On development you can set this in your .env with `SINGLE_TENANT_MODE=true` and restart foreman. On heroku it's under the `Config Variables`.
-The first user in single tenant mode can be created by a rake task `rake create_user`. We'll ask you for your credentials.
-
-Guidelines
-----------
-- Pull requests are welcome! If you aren't able to contribute code please open an issue on Github.
-- Write specs!
-- Develop features on dedicated feature branches, feel free to open a PR while it's still WIP
-- Please adhere to the [Thoughtbot ruby styleguide](https://github.com/thoughtbot/guides/tree/master/style#ruby)
-- All code and commit messages should be in English
-- Commit messages are written in the imperative with a short, descriptive title. Good => `Return a 204 when updating a question`, bad => `Changed http response` or `I updated the http response on the update action in the QuestionController because we're not showing any data there`. The first line should always be 50 characters or less and that it should be followed by a blank line.
-- Please localize all strings and add i18n keys to the locale files sorted by key in ascending order
-
-License
--------
-Hours is distributed under the MIT license.
+MIT, same as the upstream project. Original work © 2014 Defacto Software B.V.; see [LICENSE](LICENSE).
