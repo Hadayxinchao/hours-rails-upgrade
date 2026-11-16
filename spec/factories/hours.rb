@@ -14,13 +14,13 @@
 #  billed      :boolean          default("false")
 #
 
-FactoryGirl.define do
+FactoryBot.define do
   factory :hour do
     project
     category
-    description ""
-    value 1
-    date "2014-02-26"
+    description { "" }
+    value { 1 }
+    date { "2014-02-26" }
     user
 
     factory :hour_with_client do

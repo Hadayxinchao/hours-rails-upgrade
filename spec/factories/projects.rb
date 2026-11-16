@@ -1,8 +1,8 @@
-FactoryGirl.define do
+FactoryBot.define do
   factory :project do
     sequence(:name) { |n| "project#{n}" }
-    billable false
-    archived false
+    billable { false }
+    archived { false }
 
     factory :project_with_hours do
       after(:create) do |project, _evaluator|
@@ -33,4 +33,4 @@ end
 #  description :text
 #
 
-# Read about factories at https://github.com/thoughtbot/factory_girl
+# Read about factories at https://github.com/thoughtbot/factory_bot

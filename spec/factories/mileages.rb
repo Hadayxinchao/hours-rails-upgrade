@@ -12,11 +12,11 @@
 #  updated_at :datetime
 #
 
-FactoryGirl.define do
+FactoryBot.define do
   factory :mileage do
     project
-    value 1
-    date "2014-02-26 22:06:47"
+    value { 1 }
+    date { "2014-02-26 22:06:47" }
     user
 
     factory :mileage_with_client do

@@ -1,14 +1,11 @@
 source "https://rubygems.org"
 
-ruby "3.0.7"
+ruby "3.3.10"
 
 gem "ros-apartment", "~> 3.1", require: "apartment"
 gem "audited"
 gem "aws-sdk-s3", require: false
-gem "bitters"
-gem "bourbon"
 gem "brakeman"
-gem "coffee-rails"
 gem "delayed_job_active_record"
 gem "devise", "~> 4.9"
 gem "devise_invitable"
@@ -21,9 +18,10 @@ gem "holidays"
 gem "http_accept_language"
 gem "jquery-atwho-rails", "~> 1.3.2" # autocomplete
 gem "jquery-rails", "~> 4.0"
+# json 3 dropped the quirks_mode option ActiveSupport 7.0 passes; revisit after Rails 7.x.
+gem "json", "~> 2.10"
 gem "kaminari"
 gem "momentjs-rails"
-gem "neat"
 gem "normalize-rails"
 gem "image_processing", "~> 1.12"
 gem "pg"
@@ -32,7 +30,7 @@ gem "rack-timeout"
 gem "rails", "~> 7.0.0"
 gem "recipient_interceptor"
 gem "redcarpet"
-gem "sass-rails", "~> 6.0"
+gem "dartsass-sprockets" # Dart Sass in Sprockets; replaces sass-rails / Ruby Sass
 gem "select2-rails"
 gem "simple_form"
 gem "sprockets-rails", "~>3.0"
@@ -40,7 +38,7 @@ gem "sprockets-rails", "~>3.0"
 gem "sprockets", "< 4"
 gem "title"
 gem "twitter-text" # hashtag parsing
-gem "uglifier"
+gem "terser"
 gem "puma", "~> 6.4"
 
 source "https://rails-assets.org" do
@@ -65,7 +63,7 @@ group :development, :test do
   gem "annotate"
   gem "dotenv-rails"
   gem "email_spec"
-  gem "factory_girl_rails"
+  gem "factory_bot_rails"
   gem "letter_opener"
   gem "pry-rails"
   gem "rspec-rails", "~> 4.1"
