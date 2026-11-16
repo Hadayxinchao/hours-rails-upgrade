@@ -20,3 +20,8 @@ Running notes per hop, used as raw material for the final case study.
 
 Result: 280 examples, 0 failures. Production boot and `assets:precompile` OK.
 Remaining deprecation: `schema_migrations_table_name` (from `apartment`), to handle in the 5.2 hop.
+
+### Manual smoke test on 5.1 (`docker compose up web`)
+
+Logged in as `user1@acme.test`: Dashboard, Reports, Billables, Team, Project, Clients and User entries all return 200.
+Pre-existing bug found: `GET /entries` (route with no `user_id`) raises `NoMethodError` on `nil.hours`. It is not linked anywhere in the UI and fails the same way on 5.0; the fix is to remove the orphan route.
