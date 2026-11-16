@@ -23,8 +23,8 @@ module ApplicationHelper
 
   def client_title(client)
     html = ""
-    html << if client.logo_url != ""
-              image_tag(client.logo_url, class: "logo", alt: "Logo")
+    html << if client.logo.attached?
+              image_tag(client.logo_thumbnail, class: "logo", alt: "Logo")
             else
               content_tag(
                 :span,
@@ -64,8 +64,10 @@ module ApplicationHelper
     params[:filters][param] if params[:filters]
   end
 
+  # Carry the active report filters over to the CSV download link.
   def download_csv_params
-    params.permit(*EntryFilter::KEYS).merge(format: "csv")
+    filters = params.fetch(:entry_filter, {}).permit(*EntryFilter::KEYS).to_h
+    filters.empty? ? { format: "csv" } : { entry_filter: filters, format: "csv" }
   end
 
   def colored_span(color, content)

@@ -5,7 +5,7 @@ A documented, step-by-step upgrade of a real, abandoned Rails SaaS app: from **R
 > Fork of [DefactoSoftware/Hours](https://github.com/DefactoSoftware/Hours) (MIT), a multi-tenant time-tracking app: accounts on subdomains, clients, projects, hours, mileage, reports, CSV export, billing and invitations. Last upstream commit: June 2020.
 > The upgrade work, tooling and case study in this repository are by [Bui Hoang Ha](https://portfolio.hadayxinchao.com/).
 
-**Status:** 🚧 In progress, at **Rails 5.2.8 / Ruby 2.6** (hop 2 of 7). See [Progress](#progress).
+**Status:** 🚧 In progress, at **Rails 6.0.6 / Ruby 2.7** (hop 3 of 7). See [Progress](#progress).
 
 ---
 
@@ -46,7 +46,8 @@ Full plan: [`docs/case-study/UPGRADE_PLAN.md`](docs/case-study/UPGRADE_PLAN.md)
 | 0. Reproducible baseline | [`hop/0-baseline`](../../tree/hop/0-baseline) | ✅ | Docker env, benchmark, audit; unblocked the yanked gem |
 | 1. Rails 5.0 → 5.1 | [`hop/1-rails-5.1`](../../tree/hop/1-rails-5.1) | ✅ | Found an association-order bug that breaks Reports/CSV on 5.1+ |
 | 2. Rails 5.1 → 5.2, Ruby 2.4 → 2.6 | [`hop/2-rails-5.2`](../../tree/hop/2-rails-5.2) | ✅ | Security patch broke audit logging (89 failing specs); fixed a report-filter bug present since 2020 |
-| 3. Rails 6.0 / 6.1, Ruby 2.7 → 3.0 | | ⏳ | Zeitwerk, Paperclip → Active Storage, Ruby 3 kwargs |
+| 3. Rails 6.0, Ruby 2.7, Active Storage | [`hop/3-rails-6.0`](../../tree/hop/3-rails-6.0) | ✅ | Zeitwerk; Paperclip → Active Storage with a tenant-aware data migration; fixed CSV export ignoring filters |
+| 3b. Rails 6.1, Ruby 3.0 | | ⏳ | Ruby 3 keyword arguments |
 | 4. Rails 7.0 → 7.2, Ruby 3.3 | | ⏳ | Propshaft + importmap, CoffeeScript → JS, Puma |
 | 5. Rails 8.x, Ruby 3.4 | | ⏳ | Solid Queue, Solid Cache, GitHub Actions CI |
 | 6. Performance + security pass | | ⏳ | CSV streaming, N+1 fixes, 0 known vulnerabilities |
@@ -57,13 +58,14 @@ Every finding along the way is logged in [`docs/case-study/UPGRADE_LOG.md`](docs
 
 | Metric | Before | After |
 |---|---:|---:|
-| Known vulnerabilities | 167 | 138 (on 5.2) |
+| Known vulnerabilities | 167 | 99 (on 6.0) |
 | Brakeman warnings | 8 | – |
-| Specs passing | 280 / 280 | 280 / 280 (on 5.2) |
+| Specs passing | 280 / 280 | 289 / 289 (on 6.0) |
 | Reports CSV export p50 | 34,657 ms | – |
 | Billables p50 | 2,793 ms | – |
 | Dashboard p50 | 548 ms | – |
 | Process memory | 887 MB | – |
+| Locked gems | 290 | 171 (on 6.0) |
 
 Baseline details: [`docs/case-study/BASELINE.md`](docs/case-study/BASELINE.md)
 

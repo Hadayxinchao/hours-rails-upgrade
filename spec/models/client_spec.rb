@@ -33,13 +33,29 @@ describe Client do
     end
   end
 
-  describe "#logo_url" do
-    context "when it is set" do
-      it "returns the uploaded image" do
-        fake_logo = "logo.png"
-        client = build(:client, logo: fixture_file_upload(fake_logo))
-        expect(client.logo_url).to eq(client.logo.url(:original))
-      end
+  describe "logo" do
+    it "accepts an image" do
+      client = build(:client)
+      client.logo.attach(fixture_file_upload("logo.png", "image/png"))
+
+      expect(client).to be_valid
+    end
+
+    it "rejects a file that is not an image" do
+      client = build(:client)
+      client.logo.attach(io: StringIO.new("not an image"), filename: "logo.txt",
+                         content_type: "text/plain")
+
+      expect(client).not_to be_valid
+      expect(client.errors[:logo]).to be_present
+    end
+
+    it "has a 100x100 thumbnail variant" do
+      client = create(:client)
+      client.logo.attach(fixture_file_upload("logo.png", "image/png"))
+
+      expect(client.logo_thumbnail.variation.transformations)
+        .to eq(resize_to_fill: [100, 100])
     end
   end
 end

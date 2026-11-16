@@ -12,6 +12,19 @@ feature "User manages clients" do
     expect(page).to have_content(I18n.t("client_created"))
   end
 
+  scenario "uploads a logo that is shown on the client page" do
+    visit clients_url(subdomain: subdomain)
+    fill_in "Name", with: "Logo Client"
+    attach_file "Logo", Rails.root.join("spec/fixtures/logo.png")
+    click_button I18n.t("helpers.submit.client.create", model: "Client")
+
+    client = Client.find_by!(name: "Logo Client")
+    expect(client.logo).to be_attached
+
+    visit client_url(client, subdomain: subdomain)
+    expect(page).to have_css("img.logo[alt='Logo']")
+  end
+
   scenario "creates a client with a duplicate name" do
     create(:client, name: "duplicate name")
     create_client("Duplicate name")

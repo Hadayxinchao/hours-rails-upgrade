@@ -12,3 +12,7 @@
 /tags
 /tmp/*
 /config/database.yml
+
+# Active Storage local uploads
+/storage/*
+!/storage/.keep
