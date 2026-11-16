@@ -1,9 +1,9 @@
 # Current upgrade-target environment. RUBY_IMAGE moves forward with each hop.
-ARG RUBY_IMAGE=ruby:2.6.10-bullseye
+ARG RUBY_IMAGE=ruby:2.7.8-bullseye
 FROM ${RUBY_IMAGE}
 
 # Debian bullseye security updates have moved to archive.debian.org.
-RUN sed -i 's|security.debian.org|archive.debian.org|g' /etc/apt/sources.list \
+RUN sed -i -e 's|security.debian.org/debian-security|archive.debian.org/debian-security|g' -e 's|deb.debian.org/debian-security|archive.debian.org/debian-security|g' /etc/apt/sources.list \
   && apt-get update -yqq \
   && apt-get install -yqq --no-install-recommends postgresql-client nodejs shared-mime-info \
   && rm -rf /var/lib/apt/lists/*

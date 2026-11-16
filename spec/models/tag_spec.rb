@@ -12,7 +12,7 @@
 describe Tag do
   describe "validations" do
     it { should validate_presence_of :name }
-    it { should validate_uniqueness_of :name }
+    it { expect(build(:tag)).to validate_uniqueness_of(:name).case_insensitive }
 
     it "validates uniqueness of name case insensitive" do
       create(:tag, name: "Client A")

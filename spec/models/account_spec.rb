@@ -13,7 +13,7 @@ describe Account do
   describe "validations" do
     it { should validate_presence_of :owner }
     it { should validate_presence_of :subdomain }
-    it { should validate_uniqueness_of :subdomain }
+    it { should validate_uniqueness_of(:subdomain).case_insensitive }
 
     it { should allow_value("defacto").for(:subdomain) }
     it { should_not allow_value("www").for(:subdomain) }

@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-ruby "2.6.10"
+ruby "2.7.8"
 
 gem "airbrake"
 gem "apartment"
@@ -75,7 +75,7 @@ group :test do
   gem "capybara"
   gem "database_cleaner"
   gem "launchy"
-  gem "shoulda-matchers", "~> 2.7.0"
+  gem "shoulda-matchers", "~> 4.5"
   gem "simplecov", require: false
   gem "timecop"
   gem "webmock"
