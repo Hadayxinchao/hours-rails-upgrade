@@ -2,7 +2,6 @@ source "https://rubygems.org"
 
 ruby "2.7.8"
 
-gem "airbrake"
 gem "ros-apartment", "~> 2.11", require: "apartment"
 gem "audited"
 gem "aws-sdk-s3", require: false
@@ -31,7 +30,7 @@ gem "image_processing", "~> 1.12"
 gem "pg"
 gem "pikaday-gem", "~> 1.2.0.0"
 gem "rack-timeout"
-gem "rails", "~> 6.0.0"
+gem "rails", "~> 6.1.0"
 gem "recipient_interceptor"
 gem "redcarpet"
 gem "sass-rails", "~> 6.0"
@@ -77,13 +76,8 @@ group :test do
   gem "capybara"
   gem "database_cleaner"
   gem "launchy"
-  gem "shoulda-matchers", "~> 4.5"
+  gem "shoulda-matchers", "~> 5.3"
   gem "simplecov", require: false
   gem "timecop"
   gem "webmock"
-end
-
-group :staging, :production do
-  gem "newrelic_rpm", ">= 3.7.3"
-  gem "rails_12factor"
 end

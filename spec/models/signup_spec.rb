@@ -11,7 +11,7 @@ describe Signup do
     signup = Signup.new(signup_params(first_name: ""))
     signup.save
 
-    expect(signup.errors.keys).to include(:first_name)
+    expect(signup.errors.attribute_names).to include(:first_name)
   end
 
   def signup_params(overrides = {})

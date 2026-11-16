@@ -4,7 +4,7 @@ describe ApplicationHelper do
   describe "#client_title" do
     it "returns an image when there's a logo" do
       client = create(:client)
-      client.logo.attach(fixture_file_upload("logo.png", "image/png"))
+      client.logo.attach(fixture_file_upload(Rails.root.join("spec/fixtures/logo.png"), "image/png"))
 
       img = Nokogiri::HTML.fragment(helper.client_title(client)).at_css("img.logo")
 

@@ -44,8 +44,8 @@ class Signup
   end
 
   def promote_errors(child)
-    child.errors.each do |attr, val|
-      errors.add(attr, val)
+    child.errors.each do |error|
+      errors.add(error.attribute, error.message)
     end
   end
 end

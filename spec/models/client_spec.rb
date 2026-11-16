@@ -36,7 +36,7 @@ describe Client do
   describe "logo" do
     it "accepts an image" do
       client = build(:client)
-      client.logo.attach(fixture_file_upload("logo.png", "image/png"))
+      client.logo.attach(fixture_file_upload(Rails.root.join("spec/fixtures/logo.png"), "image/png"))
 
       expect(client).to be_valid
     end
@@ -52,10 +52,10 @@ describe Client do
 
     it "has a 100x100 thumbnail variant" do
       client = create(:client)
-      client.logo.attach(fixture_file_upload("logo.png", "image/png"))
+      client.logo.attach(fixture_file_upload(Rails.root.join("spec/fixtures/logo.png"), "image/png"))
 
       expect(client.logo_thumbnail.variation.transformations)
-        .to eq(resize_to_fill: [100, 100])
+        .to include(resize_to_fill: [100, 100])
     end
   end
 end
