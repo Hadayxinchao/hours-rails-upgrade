@@ -3,7 +3,7 @@ source "https://rubygems.org"
 ruby "2.7.8"
 
 gem "airbrake"
-gem "apartment"
+gem "ros-apartment", "~> 2.11", require: "apartment"
 gem "audited"
 gem "aws-sdk"
 gem "bitters"
@@ -11,7 +11,7 @@ gem "bourbon"
 gem "brakeman"
 gem "coffee-rails"
 gem "delayed_job_active_record"
-gem "devise", "~> 4.7.1"
+gem "devise", "~> 4.9"
 gem "devise_invitable"
 gem "email_validator"
 gem "flutie"
@@ -31,20 +31,22 @@ gem "paperclip", "~> 6.1.0"
 gem "pg"
 gem "pikaday-gem", "~> 1.2.0.0"
 gem "rack-timeout"
-gem "rails", "~> 5.2.0"
+gem "rails", "~> 6.0.0"
 gem "recipient_interceptor"
 gem "redcarpet"
-gem "sass-rails", "~> 5.0.1"
+gem "sass-rails", "~> 6.0"
 gem "select2-rails"
 gem "simple_form"
 gem "sprockets-rails", "~>3.0"
+# Sprockets 4 needs a manifest.js rewrite; the asset pipeline moves to Propshaft in the Rails 7 hop.
+gem "sprockets", "< 4"
 gem "title"
 gem "twitter-text" # hashtag parsing
 gem "uglifier"
 gem "unicorn"
 
 source "https://rails-assets.org" do
-  gem "rails-assets-chartjs"
+  gem "rails-assets-chartjs", "~> 1.0.1" # Chart.js 1.x API; replaced in the Rails 7 hop
 end
 
 # caching
@@ -68,7 +70,7 @@ group :development, :test do
   gem "factory_girl_rails"
   gem "letter_opener"
   gem "pry-rails"
-  gem "rspec-rails", "~> 3.8"
+  gem "rspec-rails", "~> 4.1"
 end
 
 group :test do

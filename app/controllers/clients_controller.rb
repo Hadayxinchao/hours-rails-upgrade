@@ -24,7 +24,7 @@ class ClientsController < ApplicationController
   end
 
   def update
-    if resource.update_attributes(client_params)
+    if resource.update(client_params)
       redirect_to clients_path, notice: t(:client_updated)
     else
       render :edit

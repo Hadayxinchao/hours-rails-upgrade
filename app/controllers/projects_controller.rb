@@ -30,7 +30,7 @@ class ProjectsController < ApplicationController
   end
 
   def update
-    if resource.update_attributes(project_params)
+    if resource.update(project_params)
       redirect_to project_path(resource), notice: t(:project_updated)
     else
       render action: "edit"

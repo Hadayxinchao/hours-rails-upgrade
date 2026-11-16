@@ -13,7 +13,7 @@ class MileagesController < EntriesController
   end
 
   def update
-    if resource.update_attributes(entry_params)
+    if resource.update(entry_params)
       redirect_to user_entries_path(current_user) + "#mileages",
                   notice: t("entry_saved")
     else
