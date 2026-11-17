@@ -50,7 +50,7 @@ end
 gem "dalli" # memcached
 # connection_pool 3 takes keyword args; Rails <= 7.2 MemCacheStore passes a hash
 # (ArgumentError the moment the cache is used). Re-test on Rails 8.
-gem "connection_pool", "~> 2.5"
+gem "connection_pool", "~> 3.0"
 gem "memcachier"
 
 group :development do
