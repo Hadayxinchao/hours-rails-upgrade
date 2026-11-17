@@ -39,8 +39,8 @@ Raw reports: [`baseline/bundle-audit.txt`](baseline/bundle-audit.txt), [`baselin
 | `newrelic_rpm` 3.9 (2014) | **Crashes production boot on Rails 5.0** ("detected unsupported rails version") | Current `newrelic_rpm`, or drop it |
 | `EntryQuery::Scopes.set` | Module-level mutable state: race condition under a threaded server | Pass entry type per query instead of via a global (blocks the Unicorn → Puma move) |
 | `factory_girl_rails` | Renamed in 2017 | `factory_bot_rails` |
-| `coffee-rails`, `uglifier`, `jquery-rails`, `rails-assets-chartjs` | Legacy asset pipeline | Propshaft + importmap; CoffeeScript → plain JS/Stimulus |
-| `sass-rails`, `bourbon`/`neat`/`bitters` | Deprecated libsass | `dartsass-rails`; replace Neat grid with CSS grid |
+| `coffee-rails`, `uglifier`, `jquery-rails`, `rails-assets-chartjs` | Legacy asset pipeline | ~~Propshaft + importmap~~ **Done differently:** kept Sprockets (still supported on Rails 8); CoffeeScript → plain JS, Uglifier → Terser. See UPGRADE_LOG hop 4 |
+| `sass-rails`, `bourbon`/`neat`/`bitters` | Deprecated libsass | **Done:** `dartsass-sprockets`, Bourbon/Neat SCSS vendored (UI unchanged) |
 | `delayed_job_active_record` | Still works, but not the Rails 8 default | Solid Queue |
 | `dalli` + `memcachier` | Extra infrastructure | Solid Cache (Postgres-backed) |
 | `unicorn` | Not thread-aware | Puma |

@@ -136,3 +136,44 @@ Result: **294 examples, 0 failures, 0 deprecation warnings, 0 Ruby warnings**.
 Brakeman: 8 → **3** (remaining: EOL Ruby/Rails, `:hybrid` cookies).
 Known vulnerabilities: 99 → **93**. Gems: 171 → **163**.
 Note: the repo-root `Dockerfile` and `docker-compose.yml` are the upstream 2020 files (Ruby 2.4, Unicorn). They are replaced in the Rails 8 hop by a production Dockerfile.
+
+## Hop 4: Rails 7.0 → 7.2, Ruby 3.3, modern Sass/JS toolchain (tag `hop/4-rails-7.2`)
+
+Four commits: Rails 7.0 → Ruby 3.3 + front-end toolchain → Rails 7.1 → Rails 7.2 + security patch round.
+
+### Rails 6.1 → 7.0 → 7.1 → 7.2
+
+Mostly configuration: `legacy_connection_handling` (removed), `Time#to_s(:number)` → `to_fs`, `show_exceptions :none`, `fixture_paths` (rspec-rails 4.1 → 7.1), `to_time_preserves_timezone = true`, `cache_format_version 7.1`, and the Active Storage 7.0 migration. Rails 7.2 went green with no code changes, because the earlier hops had already cleared every deprecation.
+
+### Ruby 3.0 → 3.3
+
+| Finding | Fix |
+|---|---|
+| `File.exists?` removed in Ruby 3.2: `dotenv 0.11`, Ruby `sass 3.2` | dotenv 3.2; Ruby Sass removed (below) |
+| `pry 0.11` crashes on Ruby 3.3 | pry 0.16 |
+| `execjs` pulled `json 3.1`, which dropped the `quirks_mode` option ActiveSupport still passes (**156 failing specs**; still true on 7.2) | Pin `json ~> 2.10`, re-test on Rails 8 |
+| Redcarpet allocator warning | redcarpet 3.6 |
+
+### Front-end toolchain (forced by Ruby 3.3: Ruby Sass no longer runs)
+
+| Before | After |
+|---|---|
+| `sass-rails` + Ruby Sass/libsass | `dartsass-sprockets` (Dart Sass 1.108) |
+| `bourbon 3.2` / `neat 1.5` / `bitters 0.10` gems | SCSS vendored in `vendor/assets/stylesheets` |
+| CoffeeScript (7 files) + `coffee-rails` | Plain JavaScript (compiled once with the CoffeeScript compiler, then committed) |
+| Uglifier (ES5 only; failed on `const` in a bundled library) | Terser |
+| `factory_girl` | `factory_bot` 6 (13 static attributes → blocks) |
+
+**Subtle CSS regression caught by diffing the compiled output.** Neat 1.5 targeted Sass 3.2, where assigning a variable inside a mixin overwrote the global. Since Sass 3.4 that creates a local instead, so under Dart Sass every `row(table)` / `media()` layout silently compiled to floats (Billables, Reports and Projects columns). Nothing failed. Found by comparing the new CSS rule by rule with a build from the original 2020 environment, and fixed with `!global` in the vendored Neat (what Neat 1.6 did upstream). After the fix the stylesheets are equivalent: 1,474 identical declarations, and the rest are formatting differences. The old build had emitted **invalid** select2 gradients (`linear, to bottom, …`); the new one is correct.
+
+**Plan change:** Sprockets stays. It is still supported on Rails 8, and moving to Propshaft + importmap means replacing six gem-packaged jQuery plugins, with no benefit to users. The compile chain is now modern (Dart Sass, Terser, no CoffeeScript).
+
+### Security patch round
+
+addressable 2.7 → 2.9, dalli 2.7 → 5.3, loofah, rails-html-sanitizer, net-imap, jquery-rails 4.6, Puma 6 → 7.2.
+
+**Production cache was broken (since the Rails 7.1 commit).** `connection_pool` 3.0 takes keyword arguments, but Rails ≤ 7.2's `MemCacheStore` passes a hash, so the app raises `ArgumentError` as soon as caching is enabled. The specs run with caching off and could not see it; found by exercising the store against a real memcached container. Pinned `connection_pool ~> 2.5` (verified: write/read/fetch/increment against memcached) and added a spec that builds the production cache store.
+
+Result: **295 examples, 0 failures, 0 deprecation warnings, 0 Ruby warnings**. All pages and compiled assets return 200 in the browser.
+Known vulnerabilities: 93 → **30** (all remaining ones are in Rails 7.2 itself, now EOL, plus Devise 4; next hop).
+Brakeman: 3 → **2** (EOL Rails 7.2, `:hybrid` cookies).

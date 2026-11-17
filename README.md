@@ -5,7 +5,7 @@ A documented, step-by-step upgrade of a real, abandoned Rails SaaS app: from **R
 > Fork of [DefactoSoftware/Hours](https://github.com/DefactoSoftware/Hours) (MIT), a multi-tenant time-tracking app: accounts on subdomains, clients, projects, hours, mileage, reports, CSV export, billing and invitations. Last upstream commit: June 2020.
 > The upgrade work, tooling and case study in this repository are by [Bui Hoang Ha](https://portfolio.hadayxinchao.com/).
 
-**Status:** 🚧 In progress, at **Rails 6.1.7 / Ruby 3.0** (hop 3b of 7). See [Progress](#progress).
+**Status:** 🚧 In progress, at **Rails 7.2.3 / Ruby 3.3** (hop 4 of 6). See [Progress](#progress).
 
 ---
 
@@ -35,7 +35,7 @@ The good news is a real safety net: **280 specs, 99.3% line coverage**.
 1. **Reproduce first.** Freeze the original environment in Docker ([`docker/legacy`](docker/legacy)) so "before" numbers are real, not guessed.
 2. **Measure.** Security audit, test suite, and a [version-agnostic benchmark](script/benchmark): the same seed data (20k hour entries) and the same 9 pages, timed through the full Rack stack in production mode, on every Rails version.
 3. **Upgrade one minor version at a time.** Bump → `rails app:update` → keep app-specific config → fix deprecations → specs green → tag.
-4. **Replace dead dependencies** (Paperclip, CoffeeScript/Sprockets, Unicorn, Delayed Job, Memcached, Travis) with their Rails 8 equivalents.
+4. **Replace dead dependencies** (Paperclip, Ruby Sass, CoffeeScript, Unicorn, Delayed Job, Memcached, Travis) with maintained equivalents.
 5. **Performance pass** after the upgrade: fix N+1s, add indexes, stream the CSV export.
 6. **Publish before/after numbers** with the same scripts.
 
@@ -50,7 +50,7 @@ Full plan: [`docs/case-study/UPGRADE_PLAN.md`](docs/case-study/UPGRADE_PLAN.md)
 | 2. Rails 5.1 → 5.2, Ruby 2.4 → 2.6 | [`hop/2-rails-5.2`](../../tree/hop/2-rails-5.2) | ✅ | Security patch broke audit logging (89 failing specs); fixed a report-filter bug present since 2020 |
 | 3. Rails 6.0, Ruby 2.7, Active Storage | [`hop/3-rails-6.0`](../../tree/hop/3-rails-6.0) | ✅ | Zeitwerk; Paperclip → Active Storage with a tenant-aware data migration; fixed CSV export ignoring filters |
 | 3b. Rails 6.1, Ruby 3.0, Puma | [`hop/3b-rails-6.1`](../../tree/hop/3b-rails-6.1) | ✅ | **Found and fixed a critical bug: any user could wipe an account's data via one URL**; Unicorn → Puma |
-| 4. Rails 7.0 → 7.2, Ruby 3.3 | | ⏳ | Propshaft + importmap, CoffeeScript → JS, Puma |
+| 4. Rails 7.0 → 7.2, Ruby 3.3 | [`hop/4-rails-7.2`](../../tree/hop/4-rails-7.2) | ✅ | Ruby Sass → Dart Sass, CoffeeScript → JS; caught a silent CSS layout regression by diffing compiled CSS; fixed a broken production cache |
 | 5. Rails 8.x, Ruby 3.4 | | ⏳ | Solid Queue, Solid Cache, GitHub Actions CI |
 | 6. Performance + security pass | | ⏳ | CSV streaming, N+1 fixes, 0 known vulnerabilities |
 
@@ -60,14 +60,14 @@ Every finding along the way is logged in [`docs/case-study/UPGRADE_LOG.md`](docs
 
 | Metric | Before | After |
 |---|---:|---:|
-| Known vulnerabilities | 167 | 93 (on 6.1) |
-| Brakeman warnings | 8 (+1 critical it missed) | 3 (on 6.1) |
-| Specs passing | 280 / 280 | 294 / 294 (on 6.1) |
+| Known vulnerabilities | 167 | 30 (on 7.2) |
+| Brakeman warnings | 8 (+1 critical it missed) | 2 (on 7.2) |
+| Specs passing | 280 / 280 | 295 / 295 (on 7.2) |
 | Reports CSV export p50 | 34,657 ms | – |
 | Billables p50 | 2,793 ms | – |
 | Dashboard p50 | 548 ms | – |
 | Process memory | 887 MB | – |
-| Locked gems | 290 | 163 (on 6.1) |
+| Locked gems | 290 | 175 (on 7.2) |
 
 Baseline details: [`docs/case-study/BASELINE.md`](docs/case-study/BASELINE.md)
 

@@ -17,8 +17,8 @@ gem "high_voltage"
 gem "holidays"
 gem "http_accept_language"
 gem "jquery-atwho-rails", "~> 1.3.2" # autocomplete
-gem "jquery-rails", "~> 4.0"
-# json 3 dropped the quirks_mode option ActiveSupport 7.0 passes; revisit after Rails 7.x.
+gem "jquery-rails", "~> 4.6"
+# json 3 removed the quirks_mode option that ActiveSupport (<= 7.2) passes; re-test on Rails 8.
 gem "json", "~> 2.10"
 gem "kaminari"
 gem "momentjs-rails"
@@ -27,7 +27,7 @@ gem "image_processing", "~> 1.12"
 gem "pg"
 gem "pikaday-gem", "~> 1.2.0.0"
 gem "rack-timeout"
-gem "rails", "~> 7.1.0"
+gem "rails", "~> 7.2.0"
 gem "recipient_interceptor"
 gem "redcarpet"
 gem "dartsass-sprockets" # Dart Sass in Sprockets; replaces sass-rails / Ruby Sass
@@ -39,7 +39,7 @@ gem "sprockets", "< 4"
 gem "title"
 gem "twitter-text" # hashtag parsing
 gem "terser"
-gem "puma", "~> 6.4"
+gem "puma", "~> 7.2"
 
 source "https://rails-assets.org" do
   gem "rails-assets-chartjs", "~> 1.0.1" # Chart.js 1.x API; replaced in the Rails 7 hop
@@ -48,6 +48,9 @@ end
 # caching
 
 gem "dalli" # memcached
+# connection_pool 3 takes keyword args; Rails <= 7.2 MemCacheStore passes a hash
+# (ArgumentError the moment the cache is used). Re-test on Rails 8.
+gem "connection_pool", "~> 2.5"
 gem "memcachier"
 
 group :development do
