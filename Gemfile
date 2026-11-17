@@ -7,7 +7,7 @@ gem "audited"
 gem "aws-sdk-s3", require: false
 gem "brakeman"
 gem "delayed_job_active_record"
-gem "devise", "~> 4.9"
+gem "devise", "~> 5.0"
 gem "devise_invitable"
 gem "email_validator"
 gem "flutie"
