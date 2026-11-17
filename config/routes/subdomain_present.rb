@@ -6,7 +6,7 @@ end
 resources :categories, only: %i[index create edit update]
 resources :entries, only: [:index]
 
-resources :hours, :mileages, only: %i[create destroy update edit patch] do
+resources :hours, :mileages, only: %i[create destroy update edit] do
   resources :audits, only: [:index]
 end
 

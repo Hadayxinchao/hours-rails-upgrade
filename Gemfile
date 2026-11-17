@@ -27,7 +27,7 @@ gem "image_processing", "~> 1.12"
 gem "pg"
 gem "pikaday-gem", "~> 1.2.0.0"
 gem "rack-timeout"
-gem "rails", "~> 7.2.0"
+gem "rails", "~> 8.0.0"
 gem "recipient_interceptor"
 gem "redcarpet"
 gem "dartsass-sprockets" # Dart Sass in Sprockets; replaces sass-rails / Ruby Sass

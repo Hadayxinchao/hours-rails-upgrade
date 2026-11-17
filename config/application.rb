@@ -21,6 +21,8 @@ module Hours
     # 6.1 cache format is removed in Rails 7.2; existing cache entries are
     # simply recomputed after deploy.
     config.active_support.cache_format_version = 7.1
+    # Rails 8.1 behaviour: Time#to_time keeps the receiver's full time zone.
+    config.active_support.to_time_preserves_timezone = :zone
 
     # Rails 5.2.8.1+ (CVE-2022-32224) safe-loads YAML columns. `audited`
     # stores changes as YAML, so allow the value types it writes.
