@@ -41,7 +41,7 @@ gem "terser"
 gem "puma", "~> 7.2"
 
 source "https://rails-assets.org" do
-  gem "rails-assets-chartjs", "~> 1.0.1" # Chart.js 1.x API; replaced in the Rails 7 hop
+  gem "rails-assets-chartjs", "~> 4.5.1" # Chart.js 1.x API; replaced in the Rails 7 hop
 end
 
 # caching
