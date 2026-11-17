@@ -1,0 +1,10 @@
+.git/
+log/*
+tmp/*
+coverage/
+docs/
+storage/*
+public/assets
+.env
+spec/
+docker/

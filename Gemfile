@@ -34,8 +34,7 @@ gem "dartsass-sprockets" # Dart Sass in Sprockets; replaces sass-rails / Ruby Sa
 gem "select2-rails"
 gem "simple_form"
 gem "sprockets-rails", "~>3.0"
-# Sprockets 4 needs a manifest.js rewrite; the asset pipeline moves to Propshaft in the Rails 7 hop.
-gem "sprockets", "< 4"
+gem "sprockets", "~> 4.4" # 3.x cannot read its manifest with json 3
 gem "title"
 gem "twitter-text" # hashtag parsing
 gem "terser"
@@ -52,8 +51,6 @@ group :development do
   gem "binding_of_caller"
   gem "foreman"
   gem "pry"
-  gem "spring"
-  gem "spring-commands-rspec"
 end
 
 group :development, :test do

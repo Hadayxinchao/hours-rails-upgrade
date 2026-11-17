@@ -1,36 +1,56 @@
-version: "2"
+# Production-like stack: web (Puma) + worker (Solid Queue) + Postgres.
+#   docker compose up --build      then open http://acme.hours.localhost:3000 after seeding:
+#   docker compose run --rm web bin/rails runner script/benchmark/seed.rb
+x-app: &app
+  build: .
+  image: hours-production
+  environment: &env
+    DATABASE_URL: postgres://postgres:postgres@db/hours_production
+    CACHE_DATABASE_URL: postgres://postgres:postgres@db/hours_production_cache
+    QUEUE_DATABASE_URL: postgres://postgres:postgres@db/hours_production_queue
+    SECRET_KEY_BASE: ${SECRET_KEY_BASE:-change-me-in-real-deployments-0123456789abcdef}
+    SMTP_ADDRESS: ${SMTP_ADDRESS:-mailpit}
+    SMTP_DOMAIN: ${SMTP_DOMAIN:-hours.test}
+    SMTP_USERNAME: ${SMTP_USERNAME:-user}
+    SMTP_PASSWORD: ${SMTP_PASSWORD:-pass}
+    S3_BUCKET_NAME: ${S3_BUCKET_NAME:-hours-local}
+    AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-local}
+    AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-local}
+    FORCE_SSL: "false"
+  depends_on:
+    db:
+      condition: service_healthy
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 2s
+      retries: 30
+
+  web:
+    <<: *app
+    ports:
+      - "3000:3000"
+
+  worker:
+    <<: *app
+    command: ["bin/jobs"]
+    restart: on-failure # waits for web's db:prepare on first boot
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    environment:
+      MP_SMTP_BIND_ADDR: 0.0.0.0:587
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    ports:
+      - "8025:8025"
 
 volumes:
   db-data:
-    external: false
-
-services:
-  cache:
-    image: memcached:1.4-alpine
-
-  db:
-    environment:
-      POSTGRES_USER:
-      POSTGRES_PASSWORD:
-    image: postgres:9.5
-    volumes:
-      - db-data:/usr/local/pgsql/data
-
-  jobs:
-    env_file: .env
-    build: .
-    volumes:
-      - .:/usr/src/app
-    command: bundle exec rake jobs:work
-    depends_on:
-      - db
-
-  app:
-    env_file: .env
-    build: .
-    volumes:
-      - .:/usr/src/app
-    ports:
-      - "7000:8080"
-    depends_on:
-      - db

@@ -1,5 +1,7 @@
-log/
-tmp/
 .git/
+log/*
+tmp/*
 coverage/
 docs/
+storage/*
+public/assets

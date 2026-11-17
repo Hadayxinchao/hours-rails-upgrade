@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      RAILS_ENV: test
+      POSTGRES_HOST: localhost
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: System packages
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick libpq-dev
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true # Ruby version from .ruby-version
+      - name: Database
+        run: bin/rails db:create db:schema:load
+      - name: Specs
+        run: bundle exec rspec
+      - name: Zeitwerk
+        run: bin/rails zeitwerk:check
+
+  security:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: Brakeman
+        run: bundle exec brakeman --no-pager --quiet --exit-on-warn --no-exit-on-error
+      - name: bundler-audit
+        run: gem install bundler-audit --no-document && bundle-audit check --update
+
+  docker:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build production image
+        run: docker build -t hours:ci .

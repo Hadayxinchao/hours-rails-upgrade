@@ -1,0 +1,11 @@
+#!/bin/bash
+set -e
+# Prepare primary, cache and queue databases before the web server starts.
+# (Apartment migrates every tenant schema as part of db:migrate.)
+case " $* " in
+  *" puma "*|*" rails server "*|*" bin/rails server "*)
+    ./bin/rails db:prepare
+    ;;
+esac
+
+exec "$@"

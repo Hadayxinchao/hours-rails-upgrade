@@ -1,24 +1,26 @@
 {
   "ignored_warnings": [
     {
-      "warning_type": "Cross-Site Request Forgery",
-      "warning_code": 86,
-      "fingerprint": "203ff193d4a23203c4ede561ad887e971258642a5b7a58e2e28a1d7d4043cb26",
-      "message": "protect_from_forgery should be configured with 'with: :exception'",
-      "file": "app/controllers/application_controller.rb",
-      "line": 4,
-      "link": "http://brakemanscanner.org/docs/warning_types/cross-site_request_forgery/",
-      "code": "protect_from_forgery(:with => :reset_session)",
+      "warning_type": "Remote Code Execution",
+      "warning_code": 110,
+      "fingerprint": "9ae68e59cfee3e5256c0540dadfeb74e6b72c91997fdb60411063a6e8518144a",
+      "check_name": "CookieSerialization",
+      "message": "Use of unsafe cookie serialization strategy `:hybrid` might lead to remote code execution",
+      "file": "config/initializers/cookies_serializer.rb",
+      "line": 5,
+      "link": "https://brakemanscanner.org/docs/warning_types/unsafe_deserialization",
+      "code": "Rails.application.config.action_dispatch.cookies_serializer = :hybrid",
       "render_path": null,
-      "location": {
-        "type": "controller",
-        "controller": "ApplicationController"
-      },
+      "location": null,
       "user_input": null,
       "confidence": "Medium",
-      "note": ""
+      "cwe_id": [
+        565,
+        502
+      ],
+      "note": "Deliberate for the upgrade release: :hybrid reads the old :marshal cookies and rewrites them as JSON. Switch to :json one session lifetime after this is deployed, then remove this entry."
     }
   ],
-  "updated": "2016-02-07 10:20:51 +0900",
-  "brakeman_version": "3.1.5"
+  "updated": "2026-11-17",
+  "brakeman_version": "8.0.4"
 }
