@@ -135,6 +135,7 @@ GEM
     crack (0.4.2)
       safe_yaml (~> 1.0.0)
     crass (1.0.8)
+    csv (3.3.7)
     dalli (5.3.3)
       logger
     dartsass-sprockets (3.2.1)
@@ -457,6 +458,7 @@ DEPENDENCIES
   binding_of_caller
   brakeman
   capybara
+  csv
   dalli
   dartsass-sprockets
   database_cleaner
@@ -510,7 +512,7 @@ DEPENDENCIES
   webmock
 
 RUBY VERSION
-   ruby 3.3.10p183
+   ruby 3.4.12p148
 
 BUNDLED WITH
-   2.5.23
+   2.6.9

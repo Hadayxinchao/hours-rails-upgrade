@@ -1,9 +1,10 @@
 source "https://rubygems.org"
 
-ruby "3.3.10"
+ruby "3.4.12"
 
 gem "ros-apartment", "~> 3.1", require: "apartment"
 gem "audited"
+gem "csv" # no longer a default gem in Ruby 3.4; used for report exports
 gem "aws-sdk-s3", require: false
 gem "brakeman"
 gem "delayed_job_active_record"

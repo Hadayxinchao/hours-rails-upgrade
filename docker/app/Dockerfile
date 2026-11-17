@@ -1,5 +1,5 @@
 # Current upgrade-target environment. RUBY_IMAGE moves forward with each hop.
-ARG RUBY_IMAGE=ruby:3.3.10-bookworm
+ARG RUBY_IMAGE=ruby:3.4.12-bookworm
 FROM ${RUBY_IMAGE}
 
 # Older Debian bases (bullseye) moved security updates to archive.debian.org.
