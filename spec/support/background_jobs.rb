@@ -1,19 +1,10 @@
-module BackgroundJobs
-  def run_background_jobs_immediately
-    delay_jobs = Delayed::Worker.delay_jobs
-    Delayed::Worker.delay_jobs = false
-    yield
-  ensure
-    Delayed::Worker.delay_jobs = delay_jobs
-  end
-end
-
+# Feature specs exercise whole flows (sign-up, invitations), so jobs enqueued
+# during them run inline. Unit specs keep the :test adapter's enqueue-only
+# behaviour and can assert on enqueued jobs.
 RSpec.configure do |config|
-  config.around(:each, type: :feature) do |example|
-    run_background_jobs_immediately do
-      example.run
-    end
-  end
+  config.include ActiveJob::TestHelper
 
-  config.include BackgroundJobs
+  config.around(:each, type: :feature) do |example|
+    perform_enqueued_jobs { example.run }
+  end
 end

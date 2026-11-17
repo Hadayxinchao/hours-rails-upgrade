@@ -58,13 +58,14 @@ Hours::Application.configure do
     config.logger = ActiveSupport::TaggedLogging.new(logger)
   end
 
-  # Use a different cache store in production.
-  if ENV["PERFORM_CACHING"]
-    config.action_controller.perform_caching = true
-    config.cache_store = :mem_cache_store
-  else
-    config.action_controller.perform_caching = false
-  end
+  # Solid Cache (database-backed, config/cache.yml) replaces memcached.
+  config.cache_store = :solid_cache_store
+  config.action_controller.perform_caching = ENV["PERFORM_CACHING"].present?
+
+  # Background jobs (mail delivery) run on Solid Queue: `bin/jobs`, or inside
+  # Puma with SOLID_QUEUE_IN_PUMA=1.
+  config.active_job.queue_adapter = :solid_queue
+  config.solid_queue.connects_to = { database: { writing: :queue } }
 
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
   # config.action_controller.asset_host = "http://assets.example.com"

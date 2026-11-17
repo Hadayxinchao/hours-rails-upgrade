@@ -50,7 +50,7 @@ end
 def drop_schemas
   connection = ActiveRecord::Base.connection.raw_connection
   schemas = connection.query(%(
-    SELECT 'drop schema ' || nspname || ' cascade;'
+    SELECT 'drop schema ' || quote_ident(nspname) || ' cascade;'
     FROM pg_namespace
     WHERE nspname != 'public'
     AND nspname NOT LIKE 'pg_%'

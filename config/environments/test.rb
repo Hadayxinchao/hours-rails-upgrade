@@ -1,4 +1,5 @@
 Hours::Application.configure do
+  config.active_job.queue_adapter = :test
   config.active_storage.service = :test
   # Settings specified here will take precedence over those in config/application.rb.
 

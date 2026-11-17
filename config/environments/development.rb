@@ -1,4 +1,5 @@
 Hours::Application.configure do
+  config.active_job.queue_adapter = :async
   config.active_storage.service = :local
   # Settings specified here will take precedence over those in config/application.rb.
 
@@ -14,7 +15,7 @@ Hours::Application.configure do
   config.consider_all_requests_local = true
   if ENV["CACHE_DEVELOPMENT"]
     config.action_controller.perform_caching = true
-    config.cache_store = :mem_cache_store
+    config.cache_store = :memory_store
   else
     config.action_controller.perform_caching = false
   end

@@ -48,6 +48,12 @@ class User < ApplicationRecord
 
   validates_presence_of :first_name, :last_name
 
+  # Devise and invitation emails go through Solid Queue instead of SMTP inside
+  # the request (TenantAwareMailDeliveryJob keeps the account schema).
+  def send_devise_notification(notification, *args)
+    devise_mailer.send(notification, self, *args).deliver_later
+  end
+
   has_one :account, foreign_key: "owner_id", inverse_of: :owner
   belongs_to :organization, class_name: "Account", inverse_of: :users
   has_many :hours

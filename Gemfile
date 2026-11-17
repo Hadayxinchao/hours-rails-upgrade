@@ -7,7 +7,8 @@ gem "audited"
 gem "csv" # no longer a default gem in Ruby 3.4; used for report exports
 gem "aws-sdk-s3", require: false
 gem "brakeman"
-gem "delayed_job_active_record"
+gem "solid_queue" # Active Job backend (Rails 8 default); replaces delayed_job
+gem "solid_cache" # replaces memcached (dalli/memcachier)
 gem "devise", "~> 5.0"
 gem "devise_invitable", "~> 2.0" # 3.x moves invitations to a new table + changes semantics; see UPGRADE_LOG
 gem "email_validator"
@@ -45,9 +46,6 @@ source "https://rails-assets.org" do
 end
 
 # caching
-
-gem "dalli" # memcached
-gem "memcachier"
 
 group :development do
   gem "better_errors"

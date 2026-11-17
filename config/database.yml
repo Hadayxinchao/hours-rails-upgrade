@@ -1,0 +1,34 @@
+# Configured through environment variables; no secrets in this file.
+default: &default
+  adapter: postgresql
+  encoding: utf8
+  min_messages: warning
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS", 5) %>
+  timeout: 5000
+  host: <%= ENV["POSTGRES_HOST"].presence || "localhost" %>
+  username: <%= ENV["POSTGRES_USER"] %>
+  password: <%= ENV["POSTGRES_PASSWORD"] %>
+
+development:
+  <<: *default
+  database: hours_development
+
+test:
+  <<: *default
+  database: hours_test
+
+# Solid Cache and Solid Queue get their own databases (Rails 8 layout). They
+# default to the primary server so a single-database deploy still works, and
+# live outside Apartment's tenant schemas either way (separate connection pools).
+production:
+  primary: &primary_production
+    <<: *default
+    url: <%= ENV["DATABASE_URL"] %>
+  cache:
+    <<: *primary_production
+    url: <%= ENV.fetch("CACHE_DATABASE_URL") { ENV["DATABASE_URL"] } %>
+    migrations_paths: db/cache_migrate
+  queue:
+    <<: *primary_production
+    url: <%= ENV.fetch("QUEUE_DATABASE_URL") { ENV["DATABASE_URL"] } %>
+    migrations_paths: db/queue_migrate
