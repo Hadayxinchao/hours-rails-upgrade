@@ -27,7 +27,7 @@ gem "image_processing", "~> 1.12"
 gem "pg"
 gem "pikaday-gem", "~> 1.2.0.0"
 gem "rack-timeout"
-gem "rails", "~> 7.0.0"
+gem "rails", "~> 7.1.0"
 gem "recipient_interceptor"
 gem "redcarpet"
 gem "dartsass-sprockets" # Dart Sass in Sprockets; replaces sass-rails / Ruby Sass
@@ -66,7 +66,7 @@ group :development, :test do
   gem "factory_bot_rails"
   gem "letter_opener"
   gem "pry-rails"
-  gem "rspec-rails", "~> 4.1"
+  gem "rspec-rails", "~> 7.1"
 end
 
 group :test do

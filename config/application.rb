@@ -18,7 +18,9 @@ module Hours
     require "time_series_initializer"
 
     config.active_record.default_timezone = :utc
-    config.active_record.legacy_connection_handling = false
+    # 6.1 cache format is removed in Rails 7.2; existing cache entries are
+    # simply recomputed after deploy.
+    config.active_support.cache_format_version = 7.1
 
     # Rails 5.2.8.1+ (CVE-2022-32224) safe-loads YAML columns. `audited`
     # stores changes as YAML, so allow the value types it writes.

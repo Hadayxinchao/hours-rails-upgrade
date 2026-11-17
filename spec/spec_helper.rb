@@ -28,7 +28,7 @@ RSpec.configure do |config|
   end
 
   config.fail_fast = true
-  config.fixture_path = "#{::Rails.root}/spec/fixtures"
+  config.fixture_paths = [Rails.root.join("spec/fixtures").to_s]
   config.include Features, type: :feature
   config.infer_base_class_for_anonymous_controllers = false
   config.infer_spec_type_from_file_location!
