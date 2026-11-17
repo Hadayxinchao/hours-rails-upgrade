@@ -8,8 +8,8 @@ gem "csv" # no longer a default gem in Ruby 3.4; used for report exports
 gem "aws-sdk-s3", require: false
 gem "brakeman"
 gem "delayed_job_active_record"
-gem "devise", "~> 4.9"
-gem "devise_invitable"
+gem "devise", "~> 5.0"
+gem "devise_invitable", "~> 2.0" # 3.x moves invitations to a new table + changes semantics; see UPGRADE_LOG
 gem "email_validator"
 gem "flutie"
 gem "haml-rails"

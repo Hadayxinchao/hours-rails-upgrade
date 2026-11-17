@@ -24,6 +24,9 @@ services:
       SMTP_DOMAIN: hours.test
       SMTP_USERNAME: bench
       SMTP_PASSWORD: bench
+      S3_BUCKET_NAME: hours-bench
+      AWS_ACCESS_KEY_ID: bench
+      AWS_SECRET_ACCESS_KEY: bench
     depends_on: [db]
     command: >
       bash -c "bundle exec rake db:create db:schema:load DISABLE_DATABASE_ENVIRONMENT_CHECK=1 >/dev/null &&

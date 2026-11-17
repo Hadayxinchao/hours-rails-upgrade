@@ -1,4 +1,5 @@
-if Rails.env.staging? || Rails.env.production?
+# Loaded early by config/environments/production.rb and again as an initializer.
+if (Rails.env.staging? || Rails.env.production?) && !defined?(SMTP_SETTINGS)
   SMTP_SETTINGS = {
     address: ENV.fetch("SMTP_ADDRESS"), # example: 'smtp.sendgrid.net'
     authentication: :plain,
