@@ -18,8 +18,6 @@ gem "holidays"
 gem "http_accept_language"
 gem "jquery-atwho-rails", "~> 1.3.2" # autocomplete
 gem "jquery-rails", "~> 4.6"
-# json 3 removed the quirks_mode option that ActiveSupport (<= 7.2) passes; re-test on Rails 8.
-gem "json", "~> 2.10"
 gem "kaminari"
 gem "momentjs-rails"
 gem "normalize-rails"
@@ -27,7 +25,7 @@ gem "image_processing", "~> 1.12"
 gem "pg"
 gem "pikaday-gem", "~> 1.2.0.0"
 gem "rack-timeout"
-gem "rails", "~> 8.0.0"
+gem "rails", "~> 8.1.0"
 gem "recipient_interceptor"
 gem "redcarpet"
 gem "dartsass-sprockets" # Dart Sass in Sprockets; replaces sass-rails / Ruby Sass
@@ -48,9 +46,6 @@ end
 # caching
 
 gem "dalli" # memcached
-# connection_pool 3 takes keyword args; Rails <= 7.2 MemCacheStore passes a hash
-# (ArgumentError the moment the cache is used). Re-test on Rails 8.
-gem "connection_pool", "~> 2.5"
 gem "memcachier"
 
 group :development do
