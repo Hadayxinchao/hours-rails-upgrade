@@ -177,3 +177,44 @@ addressable 2.7 → 2.9, dalli 2.7 → 5.3, loofah, rails-html-sanitizer, net-im
 Result: **295 examples, 0 failures, 0 deprecation warnings, 0 Ruby warnings**. All pages and compiled assets return 200 in the browser.
 Known vulnerabilities: 93 → **30** (all remaining ones are in Rails 7.2 itself, now EOL, plus Devise 4; next hop).
 Brakeman: 3 → **2** (EOL Rails 7.2, `:hybrid` cookies).
+
+## Hop 5: Rails 8.1, Ruby 3.4, Solid Queue/Cache, Docker + CI (tag `hop/5-rails-8.1`)
+
+### Rails 7.2 → 8.0 → 8.1, Ruby 3.3 → 3.4
+
+| Finding | Fix |
+|---|---|
+| `resources :hours, only: [... :patch]` (a verb, not an action) | Rails 8 raises on boot; removed (it never did anything) |
+| `to_time_preserves_timezone` | `:zone` on 8.0, option gone on 8.1 |
+| `json` / `connection_pool` pins from hop 4 | **Both removable on Rails 8.1**; MemCacheStore re-verified against memcached before it was replaced |
+| `csv` is no longer a default gem in Ruby 3.4 | Added to the Gemfile (report exports) |
+
+### Devise 4.9 → 5.0, and a public secret
+
+- Devise 5 patches the remaining Devise advisories. `devise_invitable` stays on 2.0.14: 3.x moves invitations to a new table through an **irreversible** data migration and changes when invited users are created (only on acceptance, while the Team page currently lists pending invitees). That is a product decision for the app owner, so it is documented and left undone.
+- **`config/initializers/devise.rb` contained a hardcoded `secret_key`, public on GitHub since 2014.** Devise now derives its keys from `secret_key_base` (environment). `DEVISE_SECRET_KEY` can carry an old key during a transition, because changing it invalidates outstanding reset, confirmation and invitation links.
+- Removed `config/secrets.yml`, the `secret_token` initializer and `config.secret_token` (unused since Rails 7.2).
+
+### Delayed Job → Solid Queue, memcached → Solid Cache
+
+- **Delayed Job was installed but never used.** Nothing in the app enqueued a job, every email (confirmations, password resets, invitations) went out over SMTP *inside the web request*, and the `worker` process in the Procfile ran with nothing to do.
+- Now: Active Job on **Solid Queue** (`bin/jobs`, or in Puma with `SOLID_QUEUE_IN_PUMA=1`), and Devise emails use `deliver_later`.
+- **Multi-tenancy trap:** jobs run outside a request, so they don't know the account schema. A Devise mail job would look up its user in the wrong schema, which either fails or finds *another account's* user with the same id. `TenantAwareJob` stores the Apartment tenant when the job is enqueued and wraps the whole `perform_now` in it (Active Job deserializes GlobalID arguments before `around_perform` runs, so a callback is too late). A spec reproduces `Couldn't find User with 'id'=1` without it.
+- **Solid Cache** replaces dalli + memcachier. Cache keys already include the subdomain.
+- `config/database.yml` is now committed and env-driven, with `primary` / `cache` / `queue` databases in production (cache and queue fall back to `DATABASE_URL`, so a single-database deploy still works).
+- `delayed_jobs` table dropped (per tenant, via Apartment's migration hook).
+
+Verified in production mode: job enqueued with `tenant=acme`, processed by `bin/jobs`, and the email received by a real SMTP server (Mailpit). Solid Cache read/write OK.
+
+### Production Docker image + CI
+
+- **Dockerfile** (repo root, replacing the 2020 Ruby 2.4/Unicorn file): multi-stage `ruby:3.4.12-slim`, non-root user, jemalloc, assets precompiled at build time, and `bin/docker-entrypoint` runs `db:prepare` for all three databases.
+- **docker-compose.yml**: web (Puma) + worker (Solid Queue) + Postgres 17 + Mailpit.
+- Two production-only failures found by actually running the image:
+  1. Apartment opens a DB connection at boot, which breaks `assets:precompile` in a build with no database. Fixed with `APARTMENT_DISABLE_INIT=1` for that step.
+  2. **Sprockets 3.7 cannot read its own precompiled manifest with json 3** (`unknown keyword: create_additions`). Specs and development never load the manifest, so only production crashed. Fixed with Sprockets 4.4 and `app/assets/config/manifest.js`. The compiled CSS was re-verified with `script/compare_css.py`: 1,484 identical declarations, and the rest are a newer select2, the fixed gradients and asset digests.
+- End to end on the production stack: every page returns 200; inviting a user from the UI returns in **0.13 s** (no SMTP in the request) and the invitation email arrives through the worker.
+- **GitHub Actions** replaces Travis: specs + `zeitwerk:check` on Postgres 17, Brakeman (`--exit-on-warn`), bundler-audit, and a production image build. Dependabot changed from daily/10 PRs to weekly and grouped.
+- Brakeman 4.7 (2019) → 8.1. `protect_from_forgery` → `with: :exception`. The `:hybrid` cookie serializer is kept for this release so existing `:marshal` cookies are migrated, and recorded in `config/brakeman.ignore` with a note to switch to `:json` afterwards.
+
+Result: **297 examples, 0 failures, 0 deprecation warnings, 0 Ruby warnings. bundler-audit: 0 advisories. Brakeman: 0 warnings.**

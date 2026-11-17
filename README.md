@@ -5,7 +5,9 @@ A documented, step-by-step upgrade of a real, abandoned Rails SaaS app: from **R
 > Fork of [DefactoSoftware/Hours](https://github.com/DefactoSoftware/Hours) (MIT), a multi-tenant time-tracking app: accounts on subdomains, clients, projects, hours, mileage, reports, CSV export, billing and invitations. Last upstream commit: June 2020.
 > The upgrade work, tooling and case study in this repository are by [Bui Hoang Ha](https://portfolio.hadayxinchao.com/).
 
-**Status:** 🚧 In progress, at **Rails 7.2.3 / Ruby 3.3** (hop 4 of 6). See [Progress](#progress).
+[![CI](https://github.com/Hadayxinchao/hours-rails-upgrade/actions/workflows/ci.yml/badge.svg)](https://github.com/Hadayxinchao/hours-rails-upgrade/actions/workflows/ci.yml)
+
+**Status:** ✅ Upgrade done, now on **Rails 8.1.4 / Ruby 3.4.12**. 🚧 Performance pass next (hop 6). See [Results](#results).
 
 ---
 
@@ -51,37 +53,57 @@ Full plan: [`docs/case-study/UPGRADE_PLAN.md`](docs/case-study/UPGRADE_PLAN.md)
 | 3. Rails 6.0, Ruby 2.7, Active Storage | [`hop/3-rails-6.0`](../../tree/hop/3-rails-6.0) | ✅ | Zeitwerk; Paperclip → Active Storage with a tenant-aware data migration; fixed CSV export ignoring filters |
 | 3b. Rails 6.1, Ruby 3.0, Puma | [`hop/3b-rails-6.1`](../../tree/hop/3b-rails-6.1) | ✅ | **Found and fixed a critical bug: any user could wipe an account's data via one URL**; Unicorn → Puma |
 | 4. Rails 7.0 → 7.2, Ruby 3.3 | [`hop/4-rails-7.2`](../../tree/hop/4-rails-7.2) | ✅ | Ruby Sass → Dart Sass, CoffeeScript → JS; caught a silent CSS layout regression by diffing compiled CSS; fixed a broken production cache |
-| 5. Rails 8.x, Ruby 3.4 | | ⏳ | Solid Queue, Solid Cache, GitHub Actions CI |
-| 6. Performance + security pass | | ⏳ | CSV streaming, N+1 fixes, 0 known vulnerabilities |
+| 5. Rails 8.1, Ruby 3.4 | [`hop/5-rails-8.1`](../../tree/hop/5-rails-8.1) | ✅ | Delayed Job (never used) → Solid Queue with tenant-aware jobs; Solid Cache; removed a public hardcoded Devise secret; production Docker image; GitHub Actions |
+| 6. Performance pass | | ⏳ | CSV export, Billables and Dashboard N+1s, indexes |
 
 Every finding along the way is logged in [`docs/case-study/UPGRADE_LOG.md`](docs/case-study/UPGRADE_LOG.md).
 
-### Results (filled in as hops land)
+### Results
 
-| Metric | Before | After |
+Same seed data (20k hours), same 9 pages, same script, same Postgres 9.6, production mode, single process. "Upgrade only" means no application-level performance work yet.
+
+| Metric | Before (Rails 5.0 / Ruby 2.4) | After upgrade (Rails 8.1 / Ruby 3.4) |
 |---|---:|---:|
-| Known vulnerabilities | 167 | 30 (on 7.2) |
-| Brakeman warnings | 8 (+1 critical it missed) | 2 (on 7.2) |
-| Specs passing | 280 / 280 | 295 / 295 (on 7.2) |
-| Reports CSV export p50 | 34,657 ms | – |
-| Billables p50 | 2,793 ms | – |
-| Dashboard p50 | 548 ms | – |
-| Process memory | 887 MB | – |
-| Locked gems | 290 | 175 (on 7.2) |
+| Known gem vulnerabilities (bundler-audit) | 167 (4 critical, 43 high) | **0** |
+| Brakeman warnings | 8 (and missed 1 critical) | **0** |
+| Critical app bugs found and fixed | | **4** (data wipe via URL, CSV ignoring filters, filters 500ing, public Devise secret) |
+| Specs passing | 280 / 280 | **297 / 297**, 0 deprecation warnings |
+| Reports CSV export p50 | 34,657 ms | 18,394 ms (1.9× faster) |
+| Billables p50 | 2,793 ms | 1,767 ms (1.6×) |
+| Dashboard p50 | 548 ms | 461 ms (1.2×) |
+| User entries p50 | 136 ms | 74 ms (1.8×) |
+| Reports p50 | 113 ms | 72 ms (1.6×) |
+| Ruby objects allocated (CSV export) | 38.4 M | 12.8 M (−67%) |
+| Process memory after benchmark | 887 MB | **449 MB** (−49%) |
+| Inviting a user (request time) | SMTP inside the request | 0.13 s (Solid Queue) |
+| Locked gems | 290 | 175 |
+| Infrastructure | Postgres + memcached + idle Delayed Job worker | Postgres only (Solid Queue, Solid Cache) |
+| CI | Travis (dead) | GitHub Actions: specs, Brakeman, bundler-audit, image build |
+
+Raw data: [`baseline/`](docs/case-study/baseline) and [`after-upgrade/`](docs/case-study/after-upgrade).
 
 Baseline details: [`docs/case-study/BASELINE.md`](docs/case-study/BASELINE.md)
 
 ## Run it yourself
 
-Requires Docker. The app uses subdomains for accounts, so open it on `acme.localhost`.
+Requires Docker. The app uses subdomains for accounts.
+
+**Production image** (Puma + Solid Queue worker + Postgres + Mailpit):
 
 ```bash
-cd docker/app                     # current upgrade state (docker/legacy = original Ruby 2.4 environment)
-docker compose build app
-docker compose up -d web          # seeds a demo tenant on first start
+docker compose up -d --build
+docker compose exec web bin/rails runner script/benchmark/seed.rb
 ```
 
-Open http://acme.localhost:3000 and sign in as `user1@acme.test` / `benchmark-password`.
+Open http://acme.hours.localhost:3000 and sign in as `user1@acme.test` / `benchmark-password`. Emails (invitations, password resets) appear in Mailpit at http://localhost:8025.
+
+**Development / test environment:**
+
+```bash
+cd docker/app                     # docker/legacy = the original Ruby 2.4 environment
+docker compose build app
+docker compose up -d web          # http://acme.localhost:3000, seeds a demo tenant on first start
+```
 
 ```bash
 docker compose run --rm app bash -c "bundle exec rake db:create db:schema:load && bundle exec rspec"   # test suite
@@ -98,6 +120,8 @@ To compare with the original code, check out `hop/0-baseline` and use `docker/le
 | [`docker/app/`](docker/app) | Current upgrade-target environment (app, tests, benchmark, web) |
 | [`docker/legacy/`](docker/legacy) | Frozen original Ruby 2.4 environment used for the baseline |
 | [`script/benchmark/`](script/benchmark) | Deterministic seed data + request benchmark |
+| [`script/compare_css.py`](script/compare_css.py) | Semantic diff used to prove the Sass migration kept the CSS identical |
+| [`Dockerfile`](Dockerfile), [`docker-compose.yml`](docker-compose.yml) | Production image and stack |
 | [`docs/ORIGINAL_README.md`](docs/ORIGINAL_README.md) | The upstream project's README |
 
 ## Need this for your app?
