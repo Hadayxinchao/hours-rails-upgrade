@@ -18,7 +18,7 @@ gem "hashtel", "~> 0.0.2"
 gem "high_voltage"
 gem "holidays"
 gem "http_accept_language"
-gem "jquery-atwho-rails", "~> 1.3.2" # autocomplete
+gem "jquery-atwho-rails", "~> 1.5.4" # autocomplete
 gem "jquery-rails", "~> 4.6"
 gem "kaminari"
 gem "momentjs-rails"
