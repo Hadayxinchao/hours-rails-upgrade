@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+require_relative "../lib/hours_cli"
+
+exit(HoursCLI::CLI.start(ARGV))

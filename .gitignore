@@ -16,3 +16,4 @@
 /storage/*
 !/storage/.keep
 /deploy/demo/.env
+/cli/*.gem

@@ -191,3 +191,34 @@ like Slack signs them) went through linking in the browser, then `1.5h`, `50m` (
 `start`/`status`/`stop`. All of them appeared in the open dashboard's live feed. A forged
 signature got 401. Webhook delivery to an external receiver was verified with WebMock in specs
 rather than against a real third-party URL.
+
+## Extra: command-line client (`cli/`)
+
+A `hours` command built on the step 4 API: [`cli/README.md`](../../cli/README.md).
+
+| | |
+|---|---|
+| Packaging | Gem `hours-cli` in `cli/`, Ruby ≥ 3.1, **standard library only** (net/http, json, optparse), so it installs anywhere with no dependency conflicts |
+| Commands | `login`/`logout`/`whoami`, `projects`, `categories`, `log`, `list`, `edit`, `delete`, `start`/`stop`/`status`/`discard`, `report` |
+| Conventions | Same as Slack: durations `2h`/`45m`/`1h30m`, rounded up to quarter hours; fuzzy project/category names that refuse to guess between several matches |
+| Config | `~/.config/hours/config.json` (0600, token checked before saving), overridable by `HOURS_URL`/`HOURS_TOKEN` or flags |
+| Scripting | `--json` everywhere; distinct exit codes for usage, auth, not found, rejected, network and rate limit; errors on stderr with the server's reason |
+| Pagination | Follows the API's `Link: rel="next"` headers, so reports cover every page |
+
+### Findings
+
+- **WebMock was still 1.18.0 (2014).** Its fake socket has no `close`, so `Net::HTTP.start`
+  blocks failed on Ruby 3.4. Phase 1 never hit it because no spec used that pattern. Updated to
+  3.40.0 (test-only; it's the same change as the open Dependabot PR); the full suite still passes.
+- **WebMock's `to_rack` shares one session hash across all requests of a stub**, which broke
+  Rack 2.2's session middleware from the second request on. The spec drops those keys before
+  calling Rails, like a real CLI request without cookies.
+- **Server errors were printed twice** (message, then the same text as `base:`). Fixed; only
+  field-specific details are listed under the message.
+
+### Result
+
+422 examples, 0 failures (+11 CLI end-to-end specs). The gem builds and installs cleanly.
+Verified from a terminal (Ruby 3.4.6) against the demo stack: login (config written 0600), every
+command, `--json | jq`, and the error exit codes (3 not found, 4 invoiced entry, 1 unknown
+project, 2 revoked token).
