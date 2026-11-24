@@ -14,6 +14,7 @@ gem "devise_invitable", "~> 2.0" # 3.x moves invitations to a new table + change
 gem "email_validator"
 gem "flutie"
 gem "haml-rails"
+gem "haml", "~> 6.3" # 6.x is the Hamlit-based rewrite; several times faster than 5.x
 gem "hashtel", "~> 0.0.2"
 gem "high_voltage"
 gem "holidays"

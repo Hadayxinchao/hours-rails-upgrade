@@ -50,6 +50,17 @@ feature "User manages projects" do
     expect(project.reload.billable).to be(true)
   end
 
+  scenario "the project form renders the billable switch only once" do
+    # HAML 5 with Rails 7.1+ buffers re-emitted the whole form as escaped
+    # text after the custom SwitchInput (fixed by HAML 6).
+    project = create(:project)
+    visit edit_project_url(project, subdomain: subdomain)
+
+    expect(page.html).not_to include("&lt;div")
+    expect(page).to have_css("input#project_billable[type=checkbox]", count: 1)
+    expect(page).to have_css("input#project_name", count: 1)
+  end
+
   scenario "go to the edit page of a project" do
     project = create(:project)
     visit project_url(project, subdomain: subdomain)

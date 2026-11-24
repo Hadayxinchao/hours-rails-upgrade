@@ -10,8 +10,8 @@
       - @projects.each do |project|
         .container
           %h1= project.name
-          - if project.hours.exists?(billed: false)
-            = render "hours_entries", project: project
-          - if project.mileages.exists?(billed: false)
-            = render "mileages_entries", project: project
+          - if (hours = @hours_by_project[project.id])
+            = render "hours_entries", project: project, hours: hours
+          - if (mileages = @mileages_by_project[project.id])
+            = render "mileages_entries", project: project, mileages: mileages
       %button#submit-billable-entries-test= t("billables.buttons.bill_selected")

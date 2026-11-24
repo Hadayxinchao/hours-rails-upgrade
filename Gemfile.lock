@@ -193,8 +193,9 @@ GEM
     google-protobuf (4.36.2-x86_64-linux-gnu)
       bigdecimal
       rake (~> 13.3)
-    haml (5.1.2)
-      temple (>= 0.8.0)
+    haml (6.4.0)
+      temple (>= 0.8.2)
+      thor
       tilt
     haml-rails (3.1.0)
       actionpack (>= 5.1)
@@ -473,6 +474,7 @@ DEPENDENCIES
   factory_bot_rails
   flutie
   foreman
+  haml (~> 6.3)
   haml-rails
   hashtel (~> 0.0.2)
   high_voltage

@@ -50,7 +50,7 @@ module ApplicationHelper
           name: "#{entry_type}_to_bill[]",
           class: "bill_checkbox",
           value: entry.id.to_s,
-          "data-project-id" => entry.project.id)
+          "data-project-id" => entry.project_id)
     end
   end
 
@@ -79,10 +79,5 @@ module ApplicationHelper
   def easter?
     holiday = Holidays.on(Date.today, :nl)
     holiday[0][:name] == "Pasen" if holiday.any?
-  end
-
-  def billable_hours_of(project)
-    Hour.includes(:category, :user, :project)
-        .where(project: project, billed: false)
   end
 end

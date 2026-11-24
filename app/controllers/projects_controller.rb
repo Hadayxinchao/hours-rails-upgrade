@@ -2,10 +2,10 @@ include TimeSeriesInitializer
 
 class ProjectsController < ApplicationController
   def index
-    @projects = Project.unarchived.by_last_updated.page(params[:page]).per(7)
+    @projects = Project.unarchived.by_last_updated.includes(:client).page(params[:page]).per(7)
     @hours_entry = Hour.new
     @mileages_entry = Mileage.new
-    @activities = Hour.by_last_created_at.limit(30)
+    @activities = Hour.by_last_created_at.includes(:user, :category, :project).limit(30)
   end
 
   def show

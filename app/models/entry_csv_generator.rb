@@ -5,9 +5,14 @@ class EntryCSVGenerator
     new(hours_entries, mileages_entries).generate
   end
 
+  # Every row reads the user, project, client (and category for hours).
+  # Without preloading that was ~89,000 queries for 23k rows.
+  HOURS_INCLUDES = [:user, :category, { project: :client }].freeze
+  MILEAGES_INCLUDES = [:user, { project: :client }].freeze
+
   def initialize(hours_entries, mileages_entries)
-    @hours_report = Report.new(hours_entries)
-    @mileages_report = Report.new(mileages_entries)
+    @hours_report = Report.new(preload(hours_entries, HOURS_INCLUDES))
+    @mileages_report = Report.new(preload(mileages_entries, MILEAGES_INCLUDES))
   end
 
   def generate
@@ -29,6 +34,10 @@ class EntryCSVGenerator
     end
 
     { col_sep: "," }
+  end
+
+  def preload(entries, associations)
+    entries.respond_to?(:includes) ? entries.includes(associations) : entries
   end
 
   def get_fields(entry, entry_type)

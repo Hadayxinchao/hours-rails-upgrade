@@ -26,6 +26,10 @@ class ProjectPresenter
   end
 
   def categories_with_remainder
+    @categories_with_remainder ||= build_categories_with_remainder
+  end
+
+  def build_categories_with_remainder
     categories = sorted_categories
     if sorted_categories.length > NUMBER_OF_ACTIVITIES + 1
       categories = sorted_categories.take(NUMBER_OF_ACTIVITIES)
