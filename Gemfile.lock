@@ -1,7 +1,7 @@
 GEM
   remote: https://rails-assets.org/
   specs:
-    rails-assets-chartjs (1.0.2)
+    rails-assets-chartjs (4.5.1)
 
 GEM
   remote: https://rubygems.org/
@@ -495,7 +495,7 @@ DEPENDENCIES
   puma (~> 7.2)
   rack-timeout
   rails (~> 8.1.0)
-  rails-assets-chartjs (~> 1.0.1)!
+  rails-assets-chartjs (~> 4.5.1)!
   recipient_interceptor
   redcarpet
   ros-apartment (~> 3.1)
