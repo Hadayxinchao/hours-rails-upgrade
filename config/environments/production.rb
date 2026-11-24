@@ -45,6 +45,13 @@ Hours::Application.configure do
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
   # TLS is normally terminated by the load balancer; FORCE_SSL=false for local runs.
   config.force_ssl = ENV.fetch("FORCE_SSL", "true") == "true"
+  # Behind a TLS-terminating proxy that talks plain HTTP to Puma (for example
+  # Cloudflare Tunnel), treat requests as HTTPS so force_ssl does not loop and
+  # cookies stay secure.
+  config.assume_ssl = ENV["ASSUME_SSL"] == "true"
+
+  # Accounts live on subdomains. 1 = acme.example.com; 2 = acme.hours.example.com.
+  config.action_dispatch.tld_length = Integer(ENV.fetch("TLD_LENGTH", "1"))
 
   # Set to :debug to see everything in the log.
   config.log_level = :info
@@ -96,5 +103,8 @@ Hours::Application.configure do
   config.log_formatter = ::Logger::Formatter.new
 
   # Uploaded files (client logos) on S3; see config/storage.yml.
-  config.active_storage.service = :amazon
+  config.active_storage.service = ENV.fetch("ACTIVE_STORAGE_SERVICE", "amazon").to_sym
+
+  # Keep the public demo out of search results.
+  config.action_dispatch.default_headers["X-Robots-Tag"] = "noindex, nofollow" if ENV["DEMO_MODE"] == "true"
 end

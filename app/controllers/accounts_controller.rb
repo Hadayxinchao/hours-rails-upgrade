@@ -23,6 +23,10 @@ class AccountsController < ApplicationController
   end
 
   def destroy
+    if Hours.demo_mode?
+      return redirect_to edit_account_path, alert: t("demo.disabled")
+    end
+
     current_account.destroy
     Apartment::Tenant.drop(current_subdomain)
   end

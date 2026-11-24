@@ -15,3 +15,4 @@
 # Active Storage local uploads
 /storage/*
 !/storage/.keep
+/deploy/demo/.env

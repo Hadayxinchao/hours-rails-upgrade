@@ -3,7 +3,7 @@
 A documented, step-by-step upgrade of a real, abandoned Rails SaaS app: from **Ruby 2.4 / Rails 5.0 (both end-of-life)** to a current, secure, faster Rails 8 stack. Every step is measured, tested and tagged.
 
 > Fork of [DefactoSoftware/Hours](https://github.com/DefactoSoftware/Hours) (MIT), a multi-tenant time-tracking app: accounts on subdomains, clients, projects, hours, mileage, reports, CSV export, billing and invitations. Last upstream commit: June 2020.
-> The upgrade work, tooling and case study in this repository are by [Bui Hoang Ha](https://portfolio.hadayxinchao.com/).
+> The upgrade work, tooling and case study in this repository are by [Bui Hoang Ha](https://portfolio.hadayxinchao.com/). Write-up: [Rescuing a Legacy Rails App](https://portfolio.hadayxinchao.com/blog/rails-legacy-rescue).
 
 [![CI](https://github.com/Hadayxinchao/hours-rails-upgrade/actions/workflows/ci.yml/badge.svg)](https://github.com/Hadayxinchao/hours-rails-upgrade/actions/workflows/ci.yml)
 
@@ -77,7 +77,7 @@ All three versions rebuilt from their own commits and benchmarked back to back (
 | Known gem vulnerabilities (bundler-audit) | 167 (4 critical, 43 high) | **0** |
 | Brakeman warnings | 8 (and missed 1 critical) | **0** |
 | App bugs found and fixed | | **5**: data wipe via one URL, CSV ignoring filters, report filters 500ing, public hardcoded Devise secret, broken production cache |
-| Specs | 280 | **298**, 0 deprecation warnings |
+| Specs | 280 | **308**, 0 deprecation warnings |
 | SQL statements for the CSV export | 89,006 | **13** |
 | Inviting a user (request time) | SMTP inside the request | 0.13 s (Solid Queue) |
 | Infrastructure | Postgres + memcached + idle Delayed Job worker | Postgres only (Solid Queue, Solid Cache) |
@@ -114,12 +114,15 @@ docker compose run --rm bench                                                   
 
 To compare with the original code, check out `hop/0-baseline` and use `docker/legacy`.
 
+**Public demo:** [`deploy/demo`](deploy/demo) runs a single demo account behind Cloudflare Tunnel, with a pre-filled login, a nightly data reset and outgoing email kept on the server. It is ready to deploy but not hosted yet.
+
 ## Repository layout
 
 | Path | What |
 |---|---|
 | [`docs/case-study/`](docs/case-study) | Plan, baseline, upgrade log, raw audit/benchmark output |
 | [`docker/app/`](docker/app) | Current upgrade-target environment (app, tests, benchmark, web) |
+| [`deploy/demo/`](deploy/demo) | Public demo stack (Cloudflare Tunnel, nightly reset) and how to go live |
 | [`docker/legacy/`](docker/legacy) | Frozen original Ruby 2.4 environment used for the baseline |
 | [`script/benchmark/`](script/benchmark) | Deterministic seed data, request benchmark, SQL profiler (counts query-cache hits) |
 | [`script/compare_css.py`](script/compare_css.py) | Semantic diff used to prove the Sass migration kept the CSS identical |

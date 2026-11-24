@@ -1,0 +1,80 @@
+# Public demo of Hours on one small server, reached through Cloudflare Tunnel.
+# Setup and checklist: deploy/demo/README.md
+#
+#   cp deploy/demo/.env.example deploy/demo/.env   # then fill it in
+#   docker compose -f deploy/demo/compose.yml --env-file deploy/demo/.env up -d --build
+name: hours-demo
+
+x-app-env: &env
+  DEMO_MODE: "true"
+  DEMO_SUBDOMAIN: ${DEMO_SUBDOMAIN:-hoursdemo}
+  DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@db/hours_production
+  CACHE_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db/hours_production_cache
+  QUEUE_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db/hours_production_queue
+  SECRET_KEY_BASE: ${SECRET_KEY_BASE:?set SECRET_KEY_BASE}
+  # Cloudflare terminates TLS and the tunnel talks HTTP to Puma.
+  FORCE_SSL: ${FORCE_SSL:-true}
+  ASSUME_SSL: ${ASSUME_SSL:-true}
+  TLD_LENGTH: "1"
+  # Jobs (nightly demo reset, invitation emails) run inside Puma: one container.
+  SOLID_QUEUE_IN_PUMA: "1"
+  ACTIVE_STORAGE_SERVICE: local
+  # Every email goes to the internal Mailpit; nothing leaves the server.
+  SMTP_ADDRESS: mailpit
+  SMTP_DOMAIN: ${DEMO_HOST:-hoursdemo.hadayxinchao.com}
+  SMTP_USERNAME: demo
+  SMTP_PASSWORD: demo
+  S3_BUCKET_NAME: unused
+  AWS_ACCESS_KEY_ID: unused
+  AWS_SECRET_ACCESS_KEY: unused
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 2s
+      retries: 30
+
+  web:
+    build: ../..
+    image: hours-production
+    restart: unless-stopped
+    environment: *env
+    volumes:
+      - storage:/rails/storage
+    ports:
+      - "127.0.0.1:${WEB_PORT:-3000}:3000" # local checks only; the public path is the tunnel
+    depends_on:
+      db:
+        condition: service_healthy
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    restart: unless-stopped
+    environment:
+      MP_SMTP_BIND_ADDR: 0.0.0.0:587
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+      MP_MAX_MESSAGES: 200
+    ports:
+      - "127.0.0.1:8025:8025" # read demo emails over SSH: ssh -L 8025:localhost:8025 <server>
+
+  cloudflared:
+    image: cloudflare/cloudflared:2025.11.1
+    restart: unless-stopped
+    command: ["tunnel", "--no-autoupdate", "run"]
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:-}
+    depends_on:
+      - web
+    profiles: ["tunnel"]
+
+volumes:
+  db-data:
+  storage:

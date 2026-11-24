@@ -1,5 +1,8 @@
 ---
 en:
+  demo:
+    sign_in_hint: "Public demo: sign in as %{email} with password %{password}. Data is reset every night."
+    disabled: "This is disabled in the public demo, so the demo login keeps working for everyone."
   weekdays:
     monday: Monday
     tuesday: Tuesday

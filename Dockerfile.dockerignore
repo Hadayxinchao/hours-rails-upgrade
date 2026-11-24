@@ -8,3 +8,4 @@ public/assets
 .env
 spec/
 docker/
+deploy/demo/.env

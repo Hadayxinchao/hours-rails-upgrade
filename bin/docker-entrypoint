@@ -5,6 +5,7 @@ set -e
 case " $* " in
   *" puma "*|*" rails server "*|*" bin/rails server "*)
     ./bin/rails db:prepare
+    if [ "$DEMO_MODE" = "true" ]; then ./bin/rails demo:seed; fi
     ;;
 esac
 

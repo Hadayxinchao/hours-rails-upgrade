@@ -30,6 +30,12 @@ module Hours
     ENV["SINGLE_TENANT_MODE"] == "true"
   end
 
+  # Public demo deployment: seeds a demo account, resets it nightly and
+  # blocks the few actions that would lock other visitors out.
+  def self.demo_mode?
+    ENV["DEMO_MODE"] == "true"
+  end
+
   def self.cache_id
     @@cache_id ||= Time.current.to_s
   end

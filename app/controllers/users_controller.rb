@@ -17,6 +17,10 @@ class UsersController < ApplicationController
 
   def update
     @user = current_user
+    if Hours.demo_mode? && @user.email == DemoAccount::EMAIL
+      return redirect_to edit_user_path, alert: t("demo.disabled")
+    end
+
     if @user.respond_to?(:unconfirmed_email)
       prev_unconfirmed_email = @user.unconfirmed_email
     end
