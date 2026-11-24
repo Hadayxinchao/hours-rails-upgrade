@@ -18,6 +18,10 @@ describe DemoAccount do
       expect(Hour.maximum(:date)).to be >= Date.current - 3
       expect(Hour.where(billed: false)).to exist
       expect(Mileage.count).to be > 0
+      expect(Invoice.distinct.pluck(:status)).to contain_exactly("paid", "sent")
+      expect(Invoice.where(status: "sent").map(&:display_status)).to include("overdue")
+      expect(Hour.joins(:project).where(projects: { billable: true }, invoice_id: nil, billed: false)
+                 .where("date < ?", Date.current - 31)).not_to exist
       tagged = Tagging.includes(:hour, :tag).first
       expect(tagged.hour.description).to include("##{tagged.tag.name}")
     end

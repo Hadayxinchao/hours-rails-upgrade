@@ -7,6 +7,8 @@
     = f.association :client, required: false, collection: Client.by_name, placeholder: t("project.form.client"), include_blank: t("project.form.no_client")
     = f.label :billable
     = f.input :billable, as: :switch, label: false
+    = f.input :hourly_rate, as: :decimal, input_html: { min: 0, step: "any", value: Money.to_input(@project.hourly_rate_cents, @project.money_currency) }, hint: t("project.form.rate_hint", currency: @project.money_currency)
+    = f.input :mileage_rate, as: :decimal, input_html: { min: 0, step: "any", value: Money.to_input(@project.mileage_rate_cents, @project.money_currency) }
     = f.button :submit, data: { disable_with: t("loader.saving") }
     
     - if !@project.audits.empty?

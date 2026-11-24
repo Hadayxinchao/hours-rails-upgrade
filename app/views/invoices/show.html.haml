@@ -1,0 +1,46 @@
+- content_for :page_title, "#{title} #{@invoice.number}"
+.outer
+  .container.invoices
+    .invoice-header
+      %h1
+        = "#{title} #{@invoice.number}"
+        = invoice_status_badge(@invoice)
+      .invoice-actions
+        = link_to t("invoices.actions.pdf"), invoice_path(@invoice, format: :pdf), class: "button", target: "_blank"
+        - if @invoice.draft?
+          = button_to t("invoices.actions.mark_sent"), mark_sent_invoice_path(@invoice), method: :patch
+          = button_to t("invoices.actions.delete"), invoice_path(@invoice), method: :delete, class: "danger", data: { confirm: t("invoices.actions.confirm_delete") }
+        - if @invoice.sent?
+          = button_to t("invoices.actions.mark_paid"), mark_paid_invoice_path(@invoice), method: :patch
+          = button_to t("invoices.actions.void"), void_invoice_path(@invoice), method: :patch, class: "danger", data: { confirm: t("invoices.actions.confirm_void") }
+    %dl.invoice-meta
+      %dt= t("invoices.fields.bill_to")
+      %dd= link_to @invoice.client.name, client_path(@invoice.client)
+      %dt= t("invoices.fields.issued_on")
+      %dd= l(@invoice.issued_on)
+      %dt= t("invoices.fields.due_on")
+      %dd= l(@invoice.due_on)
+    %table.invoice-table.invoice-lines
+      %tr
+        %th= t("invoices.fields.description")
+        %th.amount= t("invoices.fields.quantity")
+        %th.amount= t("invoices.fields.unit_price")
+        %th.amount= t("invoices.fields.amount")
+      - @invoice.lines.each do |line|
+        %tr
+          %td= line.description
+          %td.amount= number_with_precision(line.quantity, precision: 2, strip_insignificant_zeros: true)
+          %td.amount= money(line.unit_price_cents, @invoice.currency)
+          %td.amount= money(line.amount_cents, @invoice.currency)
+      %tr.total-row
+        %td{ colspan: 3 }= t("invoices.fields.subtotal")
+        %td.amount= money(@invoice.subtotal_cents, @invoice.currency)
+      - if @invoice.tax_rate.positive?
+        %tr.total-row
+          %td{ colspan: 3 }= t("invoices.fields.tax", rate: number_with_precision(@invoice.tax_rate, precision: 2, strip_insignificant_zeros: true))
+          %td.amount= money(@invoice.tax_cents, @invoice.currency)
+      %tr.total-row.grand-total
+        %td{ colspan: 3 }= t("invoices.fields.total")
+        %td.amount= money(@invoice.total_cents, @invoice.currency)
+    - if @invoice.notes.present?
+      %p.invoice-notes= @invoice.notes

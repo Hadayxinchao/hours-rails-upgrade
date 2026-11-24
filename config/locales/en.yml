@@ -1,5 +1,58 @@
 ---
 en:
+  errors:
+    messages:
+      invoiced: "This entry is on invoice %{number}; void the invoice before changing it"
+  invoices:
+    mileage_line: Mileage (km)
+    create_for: Create invoice
+    unbilled_by_client: Ready to invoice
+    no_rate: set a rate
+    none: No invoices yet. Create one from Billable Entries.
+    statuses:
+      draft: Draft
+      sent: Sent
+      paid: Paid
+      void: Void
+      overdue: Overdue
+    fields:
+      number: Number
+      client: Client
+      issued_on: Issued
+      due_on: Due
+      total: Total
+      status: Status
+      description: Description
+      quantity: Qty
+      unit_price: Unit price
+      amount: Amount
+      subtotal: Subtotal
+      tax: "Tax (%{rate}%)"
+      bill_to: Bill to
+      notes: Notes
+      due_in_days: Payment term (days)
+    actions:
+      create: Create draft invoice
+      pdf: Download PDF
+      mark_sent: Mark as sent
+      mark_paid: Mark as paid
+      void: Void
+      delete: Delete draft
+      confirm_void: Void this invoice? Its entries become billable again; the number is kept.
+      confirm_delete: Delete this draft? Its entries become billable again.
+    notices:
+      created: "Draft invoice %{number} created"
+      sent: "Invoice %{number} marked as sent"
+      paid: "Invoice %{number} marked as paid"
+      void: "Invoice %{number} voided; its entries are billable again"
+      deleted: "Draft %{number} deleted; its entries are billable again"
+    errors:
+      no_entries: Select at least one entry
+      entries_changed: Some entries were changed or billed in the meantime; reload and try again
+      wrong_client: "%{project} is not a billable project of this client"
+      already_billed: Some entries are already billed
+      missing_hourly_rate: "Set an hourly rate on %{project} first"
+      missing_mileage_rate: "Set a rate per km on %{project} first"
   demo:
     sign_in_hint: "Public demo: sign in as %{email} with password %{password}. Data is reset every night."
     disabled: "This is disabled in the public demo, so the demo login keeps working for everyone."
@@ -57,12 +110,22 @@ en:
       un_archive_link: Un-archive
   activerecord:
     attributes:
+      project:
+        hourly_rate: Hourly rate
+        mileage_rate: Rate per km
+      invoice:
+        due_on: Due date
+        tax_rate: Tax rate (%)
       hour:
         value: "Hours"
       mileage:
         value: "Mileages"
     errors:
       models:
+        invoice:
+          attributes:
+            due_on:
+              before_issue_date: must be on or after the issue date
         account:
           attributes:
             subdomain:
@@ -181,6 +244,7 @@ en:
     errors:
       client_missing: If the project is billable it needs a client
     form:
+      rate_hint: "In the client's currency (%{currency}); used for invoices"
       client: Client
       no_client: No Client
     show:
@@ -249,6 +313,10 @@ en:
     clients:
       index: Clients
       new: New Client
+    invoices:
+      index: Invoices
+      new: New Invoice
+      show: Invoice
     entries:
       index: All Entries
     projects:

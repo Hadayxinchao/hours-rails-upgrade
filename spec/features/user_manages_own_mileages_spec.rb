@@ -67,7 +67,7 @@ feature "User manages their own mileage" do
 
     edit_entry(new_project, new_value, new_date)
 
-    expect(page).to have_content("Something went wrong saving your entry")
+    expect(page).to have_content("Mileages is not a number")
   end
 
   private

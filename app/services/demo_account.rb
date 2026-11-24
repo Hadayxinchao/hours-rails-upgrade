@@ -12,20 +12,22 @@ class DemoAccount
   PEOPLE = [
     ["Demo", "User"], ["Linh", "Tran"], ["Sam", "Becker"], ["Maya", "Patel"], ["Tom", "de Vries"], ["Ana", "Costa"]
   ].freeze
+  # name => [description, currency]
   CLIENTS = {
-    "Northwind Traders" => "Wholesale food distributor",
-    "Blue Harbor Studio" => "Architecture and interior design",
-    "Greenleaf Health" => "Network of physiotherapy clinics",
-    "Atlas Logistics" => "Regional freight and warehousing"
+    "Northwind Traders" => ["Wholesale food distributor", "USD"],
+    "Blue Harbor Studio" => ["Architecture and interior design", "EUR"],
+    "Greenleaf Health" => ["Network of physiotherapy clinics", "USD"],
+    "Atlas Logistics" => ["Regional freight and warehousing", "GBP"]
   }.freeze
+  # [name, client, budget (hours), billable, hourly rate, rate per km]
   PROJECTS = [
-    ["Webshop relaunch", "Northwind Traders", 600, true],
-    ["Order API", "Northwind Traders", 500, true],
-    ["Portfolio site", "Blue Harbor Studio", 300, true],
-    ["Booking app", "Greenleaf Health", 650, true],
-    ["Patient portal discovery", "Greenleaf Health", 450, false],
-    ["Fleet dashboard", "Atlas Logistics", 550, true],
-    ["Internal tooling", nil, 400, false]
+    ["Webshop relaunch", "Northwind Traders", 600, true, "95", "0.65"],
+    ["Order API", "Northwind Traders", 500, true, "110", "0.65"],
+    ["Portfolio site", "Blue Harbor Studio", 300, true, "85", "0.30"],
+    ["Booking app", "Greenleaf Health", 650, true, "100", "0.65"],
+    ["Patient portal discovery", "Greenleaf Health", 450, false, nil, nil],
+    ["Fleet dashboard", "Atlas Logistics", 550, true, "90", "0.45"],
+    ["Internal tooling", nil, 400, false, nil, nil]
   ].freeze
   CATEGORIES = ["Development", "Design", "Meetings", "Project management", "Testing", "Support"].freeze
   TAGS = %w[frontend backend bugfix research deploy clientcall].freeze
@@ -72,14 +74,18 @@ class DemoAccount
         user.save!
       end
     end
-    clients = CLIENTS.to_h { |name, description| [name, Client.create!(name: name, description: description)] }
-    projects = PROJECTS.map do |name, client, budget, billable|
+    clients = CLIENTS.to_h do |name, (description, currency)|
+      [name, Client.create!(name: name, description: description, currency: currency)]
+    end
+    projects = PROJECTS.map do |name, client, budget, billable, hourly_rate, mileage_rate|
       Project.create!(name: name, client: clients[client], budget: budget, billable: billable,
+                      hourly_rate: hourly_rate, mileage_rate: mileage_rate,
                       description: "#{name} for #{client || 'our own team'}.")
     end
     categories = CATEGORIES.map { |name| Category.create!(name: name) }
     tags = TAGS.map { |name| Tag.create!(name: name) }
     insert_entries(users, projects, categories, tags)
+    create_invoices(clients.values)
     users.first
   end
 
@@ -121,8 +127,29 @@ class DemoAccount
     { created_at: time, updated_at: time }
   end
 
-  # Older work has mostly been invoiced; the last month is waiting on Billables.
+  # Work from before the invoicing feature counts as billed elsewhere; the last
+  # three months are invoiced below or still waiting on Billables.
   def billed?(date)
-    date < Date.current - 30 && random.rand < 0.9
+    date < Date.current - 90
+  end
+
+  # Per client: a paid invoice for 3–2 months ago and a sent one for 2–1
+  # months ago (overdue for some), so the Invoices page shows every status.
+  def create_invoices(clients)
+    clients.each_with_index do |client, i|
+      [[90, 60, :paid], [60, 30, :sent]].each do |from, to, status|
+        range = (Date.current - from)...(Date.current - to)
+        scope = { project: client.projects.where(billable: true), date: range, billed: false }
+        issued_on = range.end + 1
+        invoice = InvoiceBuilder.new(client, hour_ids: Hour.where(scope).ids, mileage_ids: Mileage.where(scope).ids,
+                                             issued_on: issued_on, due_in_days: [14, 30, 45, 21][i],
+                                             tax_rate: client.currency == "USD" ? 0 : 20).call.invoice
+        next unless invoice
+
+        invoice.mark_sent!
+        invoice.update!(sent_at: issued_on.in_time_zone.change(hour: 10))
+        invoice.mark_paid! if status == :paid
+      end
+    end
   end
 end

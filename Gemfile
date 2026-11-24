@@ -34,6 +34,8 @@ gem "redcarpet"
 gem "dartsass-sprockets" # Dart Sass in Sprockets; replaces sass-rails / Ruby Sass
 gem "select2-rails"
 gem "simple_form"
+gem "prawn", "~> 2.5" # invoice PDFs (pure Ruby)
+gem "prawn-table", "~> 0.2"
 gem "sprockets-rails", "~>3.0"
 gem "sprockets", "~> 4.4" # 3.x cannot read its manifest with json 3
 gem "title"

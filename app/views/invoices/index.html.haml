@@ -1,0 +1,22 @@
+.outer
+  .container.invoices
+    %h1= title
+    - if @invoices.empty?
+      %p= t("invoices.none")
+    - else
+      %table.invoice-table
+        %tr
+          %th= t("invoices.fields.number")
+          %th= t("invoices.fields.client")
+          %th= t("invoices.fields.issued_on")
+          %th= t("invoices.fields.due_on")
+          %th.amount= t("invoices.fields.total")
+          %th= t("invoices.fields.status")
+        - @invoices.each do |invoice|
+          %tr
+            %td= link_to invoice.number, invoice_path(invoice)
+            %td= invoice.client.name
+            %td= l(invoice.issued_on)
+            %td= l(invoice.due_on)
+            %td.amount= money(invoice.total_cents, invoice.currency)
+            %td= invoice_status_badge(invoice)

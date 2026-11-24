@@ -18,6 +18,7 @@
 
 class Project < ApplicationRecord
   include Sluggable
+  include MoneyAttribute
 
   audited allow_mass_assignment: true
 
@@ -30,6 +31,10 @@ class Project < ApplicationRecord
   has_many :categories, -> { distinct }, through: :hours
   has_many :tags, -> { distinct }, through: :hours
   belongs_to :client, touch: true
+
+  # Rates are in the client's currency (see docs/phase-2/PLAN.md).
+  money_attribute :hourly_rate
+  money_attribute :mileage_rate
 
   scope :by_last_updated, -> { order("projects.updated_at DESC") }
   scope :by_name, -> { order(Arel.sql("lower(name)")) }
@@ -67,6 +72,10 @@ class Project < ApplicationRecord
 
   def budget_status
     budget - total_hours_spent if budget
+  end
+
+  def money_currency
+    client&.currency || "USD"
   end
 
 

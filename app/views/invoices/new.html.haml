@@ -1,0 +1,47 @@
+.outer
+  .container.invoices
+    %h1= "#{title} – #{@client.name}"
+    - if @errors.present?
+      .invoice-errors
+        %ul
+          - @errors.each do |error|
+            %li= error
+    = form_tag invoices_path, method: :post, class: "invoice-form" do
+      = hidden_field_tag :client_id, @client.id
+      = hidden_field_tag "hour_ids[]", ""
+      = hidden_field_tag "mileage_ids[]", ""
+      .invoice-settings
+        %label
+          = t("invoices.fields.issued_on")
+          = date_field_tag :issued_on, params[:issued_on] || Date.current.iso8601
+        %label
+          = t("invoices.fields.due_in_days")
+          = number_field_tag :due_in_days, params[:due_in_days] || 14, min: 0
+        %label
+          = Invoice.human_attribute_name(:tax_rate)
+          = number_field_tag :tax_rate, params[:tax_rate] || 0, min: 0, max: 99.99, step: 0.01
+      %label
+        = t("invoices.fields.notes")
+        = text_area_tag :notes, params[:notes], rows: 2
+      - if @hours.any?
+        %h3= t("entries.index.hours")
+        %table.invoice-table
+          - @hours.each do |hour|
+            %tr
+              %td= check_box_tag "hour_ids[]", hour.id, @selected_hours.include?(hour.id), id: "hour_#{hour.id}"
+              %td= l(hour.date)
+              %td= hour.project.name
+              %td= hour.category.name
+              %td= hour.user.full_name
+              %td.amount= hour.value
+      - if @mileages.any?
+        %h3= t("entries.index.mileages")
+        %table.invoice-table
+          - @mileages.each do |mileage|
+            %tr
+              %td= check_box_tag "mileage_ids[]", mileage.id, @selected_mileages.include?(mileage.id), id: "mileage_#{mileage.id}"
+              %td= l(mileage.date)
+              %td= mileage.project.name
+              %td= mileage.user.full_name
+              %td.amount= mileage.value
+      = submit_tag t("invoices.actions.create"), data: { disable_with: t("loader.saving") }

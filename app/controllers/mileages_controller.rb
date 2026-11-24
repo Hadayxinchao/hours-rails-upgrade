@@ -17,7 +17,7 @@ class MileagesController < EntriesController
       redirect_to user_entries_path(current_user) + "#mileages",
                   notice: t("entry_saved")
     else
-      redirect_to edit_mileage_path(resource), notice: t("entry_failed")
+      redirect_to edit_mileage_path(resource), alert: update_failed_message
     end
   end
 

@@ -14,6 +14,14 @@ resources :reports, only: [:index]
 
 resources :billables, only: [:index]
 
+resources :invoices, only: %i[index new create show destroy] do
+  member do
+    patch :mark_sent
+    patch :mark_paid
+    patch :void
+  end
+end
+
 resources :users, only: %i[index update show] do
   resources :entries, only: [:index]
 end

@@ -58,6 +58,19 @@ Full plan: [`docs/case-study/UPGRADE_PLAN.md`](docs/case-study/UPGRADE_PLAN.md)
 
 Every finding along the way is logged in [`docs/case-study/UPGRADE_LOG.md`](docs/case-study/UPGRADE_LOG.md).
 
+### Phase 2: making it useful today
+
+The follow-up work a client usually asks for next, done the same way (small steps, specs green, one tag each). Plan: [`docs/phase-2/PLAN.md`](docs/phase-2/PLAN.md), log: [`docs/phase-2/LOG.md`](docs/phase-2/LOG.md).
+
+| Step | Tag | Status | Highlights |
+|---|---|---|---|
+| 1. Invoicing | [`phase2/1-invoicing`](../../tree/phase2/1-invoicing) | ✅ | Rates per project, invoices from billable entries, PDF, draft → sent → paid / void, invoiced entries locked; numbering proven race-free with a concurrent spec |
+| 2. Timer and Hotwire | | ⏳ | Running timer, inline editing, live feed; replace jQuery plugins |
+| 3. Budget alerts | | ⏳ | Budgets in money, alerts at 80% / 100% |
+| 4. API and integrations | | ⏳ | REST API with tokens, webhooks, Slack `/hours` |
+| 5. AI assistance | | ⏳ | Natural-language time entry, weekly client summary |
+| 6. Operations | | ⏳ | Kamal, error tracking, OpenTelemetry, tested backups |
+
 ### Results
 
 All three versions rebuilt from their own commits and benchmarked back to back (same seed data with 20k hours, same 9 pages, same script, same Postgres 9.6, production mode, single process). Method and raw data: [`docs/case-study/final/`](docs/case-study/final).
@@ -77,7 +90,7 @@ All three versions rebuilt from their own commits and benchmarked back to back (
 | Known gem vulnerabilities (bundler-audit) | 167 (4 critical, 43 high) | **0** |
 | Brakeman warnings | 8 (and missed 1 critical) | **0** |
 | App bugs found and fixed | | **5**: data wipe via one URL, CSV ignoring filters, report filters 500ing, public hardcoded Devise secret, broken production cache |
-| Specs | 280 | **308**, 0 deprecation warnings |
+| Specs | 280 | **330**, 0 deprecation warnings |
 | SQL statements for the CSV export | 89,006 | **13** |
 | Inviting a user (request time) | SMTP inside the request | 0.13 s (Solid Queue) |
 | Infrastructure | Postgres + memcached + idle Delayed Job worker | Postgres only (Solid Queue, Solid Cache) |

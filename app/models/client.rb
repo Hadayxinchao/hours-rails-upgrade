@@ -21,6 +21,9 @@ class Client < ApplicationRecord
   scope :by_name, -> { order(Arel.sql("lower(name)")) }
   scope :by_last_updated, -> { order("clients.updated_at DESC") }
   has_many :projects
+  has_many :invoices, dependent: :restrict_with_error
+
+  validates :currency, inclusion: { in: Money.codes }
 
   has_many :hours, through: :projects
   has_many :mileages, through: :projects

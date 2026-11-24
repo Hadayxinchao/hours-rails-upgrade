@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_17_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_24_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -86,6 +86,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_100000) do
     t.datetime "logo_updated_at"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string "currency", limit: 3, default: "USD", null: false
   end
 
   create_table "hours", force: :cascade do |t|
@@ -98,11 +99,48 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_100000) do
     t.datetime "updated_at"
     t.string "description"
     t.boolean "billed", default: false
+    t.bigint "invoice_id"
     t.index ["billed"], name: "index_hours_on_billed"
     t.index ["category_id"], name: "index_hours_on_category_id"
     t.index ["date"], name: "index_hours_on_date"
+    t.index ["invoice_id"], name: "index_hours_on_invoice_id"
     t.index ["project_id"], name: "index_hours_on_project_id"
     t.index ["user_id"], name: "index_hours_on_user_id"
+  end
+
+  create_table "invoice_lines", force: :cascade do |t|
+    t.bigint "invoice_id", null: false
+    t.integer "project_id", null: false
+    t.string "kind", null: false
+    t.string "description", null: false
+    t.decimal "quantity", precision: 12, scale: 2, null: false
+    t.bigint "unit_price_cents", null: false
+    t.bigint "amount_cents", null: false
+    t.integer "position", default: 0, null: false
+    t.index ["invoice_id"], name: "index_invoice_lines_on_invoice_id"
+    t.index ["project_id"], name: "index_invoice_lines_on_project_id"
+  end
+
+  create_table "invoices", force: :cascade do |t|
+    t.integer "client_id", null: false
+    t.string "number", null: false
+    t.string "status", default: "draft", null: false
+    t.string "currency", limit: 3, null: false
+    t.date "issued_on", null: false
+    t.date "due_on", null: false
+    t.decimal "tax_rate", precision: 5, scale: 2, default: "0.0", null: false
+    t.bigint "subtotal_cents", default: 0, null: false
+    t.bigint "tax_cents", default: 0, null: false
+    t.bigint "total_cents", default: 0, null: false
+    t.text "notes"
+    t.datetime "sent_at"
+    t.datetime "paid_at"
+    t.datetime "voided_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["client_id"], name: "index_invoices_on_client_id"
+    t.index ["number"], name: "index_invoices_on_number", unique: true
+    t.index ["status"], name: "index_invoices_on_status"
   end
 
   create_table "mileages", force: :cascade do |t|
@@ -113,8 +151,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_100000) do
     t.boolean "billed", default: false
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.bigint "invoice_id"
     t.index ["billed"], name: "index_mileages_on_billed"
     t.index ["date"], name: "index_mileages_on_date"
+    t.index ["invoice_id"], name: "index_mileages_on_invoice_id"
     t.index ["project_id"], name: "index_mileages_on_project_id"
     t.index ["user_id"], name: "index_mileages_on_user_id"
   end
@@ -129,6 +169,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_100000) do
     t.integer "client_id"
     t.boolean "archived", default: false, null: false
     t.text "description"
+    t.bigint "hourly_rate_cents"
+    t.bigint "mileage_rate_cents"
     t.index ["archived"], name: "index_projects_on_archived"
     t.index ["billable"], name: "index_projects_on_billable"
     t.index ["slug"], name: "index_projects_on_slug"
@@ -190,4 +232,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_100000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "hours", "invoices"
+  add_foreign_key "invoice_lines", "invoices", on_delete: :cascade
+  add_foreign_key "invoice_lines", "projects"
+  add_foreign_key "invoices", "clients"
+  add_foreign_key "mileages", "invoices"
 end

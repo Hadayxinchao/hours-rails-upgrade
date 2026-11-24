@@ -14,7 +14,7 @@ class HoursController < EntriesController
     if resource.update(entry_params)
       redirect_to user_entries_path(current_user), notice: t("entry_saved")
     else
-      redirect_to edit_hour_path(resource), notice: t("entry_failed")
+      redirect_to edit_hour_path(resource), alert: update_failed_message
     end
   end
 

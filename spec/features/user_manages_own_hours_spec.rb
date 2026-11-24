@@ -107,7 +107,34 @@ feature "User manages their own hours" do
 
     edit_entry(new_project, new_category, new_value, new_date, new_description)
 
-    expect(page).to have_content(I18n.t("entry_failed"))
+    expect(page).to have_content("Hours is not a number")
+  end
+
+  context "when the entry is on an invoice" do
+    let!(:invoice) do
+      project = create(:project, client: create(:client), billable: true, hourly_rate: "50")
+      hour = create(:hour, user: user, project: project, value: 2)
+      InvoiceBuilder.new(project.client, hour_ids: [hour.id]).call.invoice
+    end
+
+    scenario "deleting it is refused with the reason" do
+      click_link I18n.t("navbar.entries")
+      click_link I18n.t("entries.index.delete")
+
+      expect(page).to have_content(invoice.number)
+      expect(page).to have_no_content(I18n.t("entry_deleted.hours"))
+      expect(Hour.count).to eq 1
+    end
+
+    scenario "changing its hours is refused with the reason" do
+      click_link I18n.t("navbar.entries")
+      click_link I18n.t("entries.index.edit")
+      fill_in "hour_value", with: "8"
+      click_button I18n.t("helpers.submit.update")
+
+      expect(page).to have_content(invoice.number)
+      expect(Hour.first.value).to eq 2
+    end
   end
 
   private

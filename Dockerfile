@@ -7,7 +7,7 @@ FROM ruby:${RUBY_VERSION}-slim AS base
 
 WORKDIR /rails
 RUN apt-get update -qq \
-  && apt-get install --no-install-recommends -y curl imagemagick libjemalloc2 libpq5 postgresql-client shared-mime-info \
+  && apt-get install --no-install-recommends -y curl fonts-dejavu-core imagemagick libjemalloc2 libpq5 postgresql-client shared-mime-info \
   && rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 ENV RAILS_ENV="production" \

@@ -6,6 +6,21 @@
 .billables
   .outer
     %h1= t("billables.billable_entries")
+    - summaries = unbilled_by_client(@projects, @hours_by_project, @mileages_by_project)
+    - if summaries.any?
+      .container.invoice-summary
+        %h3= t("invoices.unbilled_by_client")
+        %table.invoice-table
+          - summaries.each do |row|
+            %tr
+              %td= row[:client].name
+              %td.amount= "#{row[:hours]} h"
+              %td.amount
+                - if row[:amount_cents]
+                  = money(row[:amount_cents], row[:client].currency)
+                - else
+                  %span.muted= t("invoices.no_rate")
+              %td.amount= link_to t("invoices.create_for"), new_invoice_path(client_id: row[:client].id), class: "button"
     = form_tag("/billables", method: "post", remote: true, id: "billable-entries-form", autocomplete: "off") do
       - @projects.each do |project|
         .container

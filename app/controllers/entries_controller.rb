@@ -23,9 +23,12 @@ class EntriesController < ApplicationController
   end
 
   def destroy
-    resource.destroy
-    redirect_to user_entries_path(current_user) + "##{controller_name}",
-                notice: t("entry_deleted.#{controller_name}")
+    message = if resource.destroy
+                { notice: t("entry_deleted.#{controller_name}") }
+              else
+                { alert: resource.errors.full_messages.to_sentence }
+              end
+    redirect_to user_entries_path(current_user) + "##{controller_name}", **message
   end
 
   def edit
@@ -33,6 +36,10 @@ class EntriesController < ApplicationController
   end
 
   private
+
+  def update_failed_message
+    resource.errors.full_messages.to_sentence.presence || t("entry_failed")
+  end
 
   def set_entry_type
     params[:controller]
