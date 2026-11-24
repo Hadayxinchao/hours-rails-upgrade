@@ -249,3 +249,43 @@ header {
 
   &--alert { background: #fdecea; color: #8a1f11; }
 }
+
+// Budget status (phase 2)
+.project-budget {
+  margin: 6px 0 2px;
+}
+
+.budget-line {
+  display: grid;
+  grid-template-columns: 12.5em minmax(60px, 1fr) 3.5em 7.5em; // fixed columns keep meters aligned
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9em;
+  color: #555;
+}
+
+.budget-meter {
+  height: 6px;
+  border-radius: 3px;
+  background: #ececec;
+  overflow: hidden;
+}
+
+.budget-meter-fill {
+  display: block;
+  height: 100%;
+  background: #6aa36f;
+}
+
+.budget-percent { text-align: right; font-variant-numeric: tabular-nums; }
+.budget-flag { font-size: 0.85em; font-weight: bold; }
+
+.budget-line--warning {
+  .budget-meter-fill { background: #e0a030; }
+  .budget-flag { color: #a8701a; }
+}
+
+.budget-line--over {
+  .budget-meter-fill { background: #d9534f; }
+  .budget-flag, .budget-percent { color: #b52b27; }
+}

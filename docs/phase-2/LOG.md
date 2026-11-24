@@ -98,3 +98,37 @@ plain `<select>` and `<input type="date">`.
 Verified in the browser on the production-mode demo stack: the timer starts and stops without a
 reload (40 min → 0.75 h), the navbar badge ticks on every page, an entry created by another user in
 a separate process appears in the open dashboard's feed, and inline editing saves in place.
+
+## Step 3: budget alerts (tag `phase2/3-budget-alerts`)
+
+### What was built
+
+| Area | Change |
+|---|---|
+| Money budgets | `projects.budget_amount_cents` next to the existing hours budget, in the client's currency. "Spent" is the logged hours and kilometres at the project's current rates; it's unknown (and the amount budget is skipped) while work is logged without a rate |
+| Status | Each budget shows a meter on project cards and pages: neutral below 80%, amber "almost used up" from 80%, red "over budget" from 100% (`role="meter"` with ARIA values) |
+| Alerts | `BudgetMonitor` records each reached threshold (80 / 100, per hours and amount) in `budget_alerts` and emails the account owner (everyone in single-tenant mode) through Solid Queue. Each alert goes out once. Passing several thresholds at once sends one email, for the highest. Dropping back below (budget raised, entry deleted) re-arms it |
+| Triggers | After hours or mileage are created, changed or deleted (both projects when an entry moves), and after a budget or rate changes: `BudgetCheckJob`, tenant-aware like the other jobs |
+| Demo | Projects have amount budgets in three states (under, warning, over). Their current state is recorded without email on reset, so only new crossings alert |
+
+### Findings
+
+- **Exactly-once without locks.** Two entries saved at the same moment start two checks. Each
+  inserts its thresholds with `INSERT … ON CONFLICT DO NOTHING RETURNING threshold` on the unique
+  index, and only the check that actually inserted a row sends the email. A spec pre-inserts the
+  row ("the other check won") and asserts no email.
+- **`saved_changes` outlives the save it describes.** The "re-check when a budget or rate changes"
+  condition first read `saved_changes` in `after_update_commit`. A project created and then touched
+  by an entry in the same flow still carried the create's changes, so it checked twice. The change
+  is now noted in `after_update` and acted on at commit; a spec checks that a touch doesn't trigger.
+- **`Project#reload` kept stale totals.** `total_hours_spent` and friends are memoized (part of
+  the hop 6 performance work), and `reload` only refreshes attributes. Harmless in requests and
+  jobs, which load fresh objects, but wrong for any caller that reloads. `reload` now clears them.
+  The monitor spec caught it.
+
+### Result
+
+366 examples, 0 failures (+14). Brakeman 0, `zeitwerk:check` clean.
+Verified on the demo stack: cutting a project's amount budget from $46,000 to $40,000 in the form
+sent "Webshop relaunch has used 83% of its budget" to the owner through Solid Queue (seen in
+Mailpit), with the amounts and a link into the account.

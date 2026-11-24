@@ -1,5 +1,24 @@
 ---
 en:
+  budget_mailer:
+    subject:
+      warning: "%{project} has used %{percent}% of its %{budget}"
+      over: "%{project} is over its %{budget} (%{percent}%)"
+    body:
+      warning: "%{project} has used %{percent}% of its %{budget}."
+      over: "%{project} has used all of its %{budget} (%{percent}%)."
+    kinds:
+      hours: hours budget
+      amount: budget
+    used: Used
+    budget: Budget
+    remaining: Remaining
+    open_project: Open the project
+  budget_status:
+    hours: "%{used} of %{limit} h"
+    amount: "%{used} of %{limit}"
+    over: over budget
+    warning: almost used up
   timers:
     title: Timer
     start: Start timer
@@ -126,6 +145,8 @@ en:
   activerecord:
     attributes:
       project:
+        budget: Budget (hours)
+        budget_amount: Budget (amount)
         hourly_rate: Hourly rate
         mileage_rate: Rate per km
       invoice:
@@ -261,6 +282,7 @@ en:
       client_missing: If the project is billable it needs a client
     form:
       rate_hint: "In the client's currency (%{currency}); used for invoices"
+      budget_amount_hint: "In %{currency}, valued at the rates below. Alerts at 80% and 100%."
       client: Client
       no_client: No Client
     show:

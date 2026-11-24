@@ -19,15 +19,15 @@ class DemoAccount
     "Greenleaf Health" => ["Network of physiotherapy clinics", "USD"],
     "Atlas Logistics" => ["Regional freight and warehousing", "GBP"]
   }.freeze
-  # [name, client, budget (hours), billable, hourly rate, rate per km]
+  # [name, client, budget (hours), billable, hourly rate, rate per km, budget (amount)]
   PROJECTS = [
-    ["Webshop relaunch", "Northwind Traders", 600, true, "95", "0.65"],
-    ["Order API", "Northwind Traders", 500, true, "110", "0.65"],
-    ["Portfolio site", "Blue Harbor Studio", 300, true, "85", "0.30"],
-    ["Booking app", "Greenleaf Health", 650, true, "100", "0.65"],
-    ["Patient portal discovery", "Greenleaf Health", 450, false, nil, nil],
-    ["Fleet dashboard", "Atlas Logistics", 550, true, "90", "0.45"],
-    ["Internal tooling", nil, 400, false, nil, nil]
+    ["Webshop relaunch", "Northwind Traders", 600, true, "95", "0.65", "46000"],
+    ["Order API", "Northwind Traders", 500, true, "110", "0.65", "40000"],
+    ["Portfolio site", "Blue Harbor Studio", 300, true, "85", "0.30", "50000"],
+    ["Booking app", "Greenleaf Health", 650, true, "100", "0.65", "60000"],
+    ["Patient portal discovery", "Greenleaf Health", 450, false, nil, nil, nil],
+    ["Fleet dashboard", "Atlas Logistics", 550, true, "90", "0.45", "37000"],
+    ["Internal tooling", nil, 400, false, nil, nil, nil]
   ].freeze
   CATEGORIES = ["Development", "Design", "Meetings", "Project management", "Testing", "Support"].freeze
   TAGS = %w[frontend backend bugfix research deploy clientcall].freeze
@@ -77,15 +77,18 @@ class DemoAccount
     clients = CLIENTS.to_h do |name, (description, currency)|
       [name, Client.create!(name: name, description: description, currency: currency)]
     end
-    projects = PROJECTS.map do |name, client, budget, billable, hourly_rate, mileage_rate|
+    projects = PROJECTS.map do |name, client, budget, billable, hourly_rate, mileage_rate, budget_amount|
       Project.create!(name: name, client: clients[client], budget: budget, billable: billable,
-                      hourly_rate: hourly_rate, mileage_rate: mileage_rate,
+                      hourly_rate: hourly_rate, mileage_rate: mileage_rate, budget_amount: budget_amount,
                       description: "#{name} for #{client || 'our own team'}.")
     end
     categories = CATEGORIES.map { |name| Category.create!(name: name) }
     tags = TAGS.map { |name| Tag.create!(name: name) }
     insert_entries(users, projects, categories, tags)
     create_invoices(clients.values)
+    # Record budgets already past 80/100% so the demo doesn't email on the
+    # first new entry; crossings after that alert as usual.
+    Project.find_each { |project| BudgetMonitor.new(project).call(notify: false) }
     users.first
   end
 

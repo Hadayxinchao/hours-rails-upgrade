@@ -3,6 +3,14 @@ module InvoicesHelper
     cents.nil? ? "–" : Money.format(cents, currency)
   end
 
+  def budget_label(usage, currency)
+    if usage.kind == "hours"
+      t("budget_status.hours", used: usage.used, limit: usage.limit)
+    else
+      t("budget_status.amount", used: money(usage.used, currency), limit: money(usage.limit, currency))
+    end
+  end
+
   def invoice_status_badge(invoice)
     status = invoice.display_status
     content_tag(:span, t("invoices.statuses.#{status}"), class: "invoice-status invoice-status--#{status}")

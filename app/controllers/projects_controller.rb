@@ -50,6 +50,6 @@ class ProjectsController < ApplicationController
   def project_params
     params.require(:project)
           .permit(:name, :billable, :client_id, :archived, :description, :budget,
-                  :hourly_rate, :mileage_rate)
+                  :hourly_rate, :mileage_rate, :budget_amount)
   end
 end

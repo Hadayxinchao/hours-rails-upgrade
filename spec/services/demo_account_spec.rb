@@ -19,6 +19,9 @@ describe DemoAccount do
       expect(Hour.where(billed: false)).to exist
       expect(Mileage.count).to be > 0
       expect(Invoice.distinct.pluck(:status)).to contain_exactly("paid", "sent")
+      levels = Project.all.flat_map(&:budget_usages).map(&:level)
+      expect(levels).to include("warning", "over")
+      expect(BudgetAlert.count).to be_positive
       expect(Invoice.where(status: "sent").map(&:display_status)).to include("overdue")
       expect(Hour.joins(:project).where(projects: { billable: true }, invoice_id: nil, billed: false)
                  .where("date < ?", Date.current - 31)).not_to exist

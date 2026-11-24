@@ -1,0 +1,20 @@
+- amount = @usage.kind == "amount"
+- fmt = ->(value) { amount ? money(value, @project.money_currency) : "#{value} h" }
+%p
+  = t("budget_mailer.body.#{@threshold == 100 ? 'over' : 'warning'}",
+      project: @project.name, percent: @usage.percentage.round, budget: t("budget_mailer.kinds.#{@usage.kind}"))
+%table{ cellpadding: 4 }
+  - if @project.client
+    %tr
+      %td= t("invoices.fields.client")
+      %td= @project.client.name
+  %tr
+    %td= t("budget_mailer.used")
+    %td= "#{fmt.(@usage.used)} (#{@usage.percentage}%)"
+  %tr
+    %td= t("budget_mailer.budget")
+    %td= fmt.(@usage.limit)
+  %tr
+    %td= t("budget_mailer.remaining")
+    %td= fmt.(@usage.remaining)
+%p= link_to t("budget_mailer.open_project"), project_url(@project, subdomain: current_subdomain)

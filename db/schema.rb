@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_25_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_26_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -69,6 +69,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_25_100000) do
     t.index ["created_at"], name: "index_audits_on_created_at"
     t.index ["request_uuid"], name: "index_audits_on_request_uuid"
     t.index ["user_id", "user_type"], name: "user_index"
+  end
+
+  create_table "budget_alerts", force: :cascade do |t|
+    t.integer "project_id", null: false
+    t.string "kind", null: false
+    t.integer "threshold", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["project_id", "kind", "threshold"], name: "index_budget_alerts_on_project_id_and_kind_and_threshold", unique: true
+    t.index ["project_id"], name: "index_budget_alerts_on_project_id"
   end
 
   create_table "categories", force: :cascade do |t|
@@ -171,6 +181,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_25_100000) do
     t.text "description"
     t.bigint "hourly_rate_cents"
     t.bigint "mileage_rate_cents"
+    t.bigint "budget_amount_cents"
     t.index ["archived"], name: "index_projects_on_archived"
     t.index ["billable"], name: "index_projects_on_billable"
     t.index ["slug"], name: "index_projects_on_slug"
@@ -245,6 +256,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_25_100000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "budget_alerts", "projects", on_delete: :cascade
   add_foreign_key "hours", "invoices"
   add_foreign_key "invoice_lines", "invoices", on_delete: :cascade
   add_foreign_key "invoice_lines", "projects"

@@ -1,0 +1,13 @@
+-# Hours and amount budgets with a meter; amber from 80%, red from 100%.
+- usages = project.budget_usages
+- if usages.any?
+  .project-budget
+    - usages.each do |usage|
+      - label = budget_label(usage, project.money_currency)
+      .budget-line{ class: ("budget-line--#{usage.level}" if usage.level) }
+        %span.budget-label= label
+        %span.budget-meter{ role: "meter", "aria-valuemin": 0, "aria-valuemax": 100, "aria-valuenow": usage.percentage.round, "aria-label": label }
+          %span.budget-meter-fill{ style: "width: #{[usage.percentage, 100].min}%" }
+        %span.budget-percent= "#{usage.percentage.round}%"
+        - if usage.level
+          %span.budget-flag= t("budget_status.#{usage.level}")

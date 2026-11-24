@@ -23,6 +23,14 @@ class Entry < ApplicationRecord
   LOCKED_ATTRIBUTES = %w[value date project_id user_id category_id].freeze
 
   validate :not_changed_while_invoiced, on: :update
+
+  # Budgets: re-check this project (and the previous one if it was moved).
+  after_commit :check_budgets
+
+  def check_budgets
+    ids = [project_id, (saved_change_to_project_id || [])[0]].compact.uniq
+    Project.where(id: ids).find_each { |project| BudgetCheckJob.perform_later(project) }
+  end
   before_destroy :prevent_destroy_while_invoiced
 
   def invoiced?
