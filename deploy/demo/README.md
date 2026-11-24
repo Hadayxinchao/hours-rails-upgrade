@@ -19,6 +19,7 @@ visitor ──HTTPS──▶ Cloudflare ──tunnel──▶ cloudflared ──
 | Guard rails | Deleting the account and changing the demo login's email/password are refused, so one visitor can't lock out the next |
 | Email | Goes to an internal Mailpit; nothing is sent to real addresses |
 | Search engines | `X-Robots-Tag: noindex, nofollow` on every response |
+| Integrations | API tokens work; creating webhooks and connecting Slack are disabled (every visitor is the owner) |
 
 Why one subdomain level (`hoursdemo.hadayxinchao.com`, not `acme.hours.hadayxinchao.com`): the app reads
 the account from the first label, which works with Rails' default `TLD_LENGTH=1`, and Cloudflare's free

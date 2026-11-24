@@ -42,6 +42,17 @@ feature "Public demo mode" do
     end
   end
 
+  scenario "webhooks and Slack can't be set up from the public demo" do
+    visit new_user_session_url(subdomain: subdomain)
+    click_button I18n.t("sign_in")
+    visit integrations_url(subdomain: subdomain)
+    fill_in "webhook_endpoint_url", with: "https://hooks.example.com/x"
+    click_button I18n.t("integrations.webhooks.add")
+
+    expect(page).to have_content(I18n.t("demo.disabled"))
+    expect(Apartment::Tenant.switch(subdomain) { WebhookEndpoint.count }).to eq 0
+  end
+
   scenario "outside demo mode the sign-in page shows no demo login" do
     allow(Hours).to receive(:demo_mode?).and_return(false)
     visit new_user_session_url(subdomain: subdomain)

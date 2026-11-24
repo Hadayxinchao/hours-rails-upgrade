@@ -1,0 +1,5 @@
+.outer
+  .container
+    %h1= t("slack.link_title")
+    %p= t("slack.link_confirm_html", slack_user: content_tag(:code, @slack_user_id), user: current_user.full_name)
+    = button_to t("slack.link_button"), slack_link_path(code: params[:code]), class: "button"

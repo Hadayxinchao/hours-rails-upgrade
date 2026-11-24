@@ -1,0 +1,440 @@
+openapi: 3.1.0
+info:
+  title: Hours API
+  version: "1.0"
+  description: |
+    JSON API for an Hours account. Every account has its own address, e.g.
+    `https://acme.example.com/api/v1`; a token only works on the account that issued it.
+
+    Authenticate with a personal token (Profile → API tokens):
+    `Authorization: Bearer hrs_...`
+
+    Limits: 300 requests per minute per token (HTTP 429 with an error body when exceeded).
+    Lists are paginated with `page` and `per_page` (max 100) and return `X-Total-Count`
+    and RFC 8288 `Link` headers (`rel="next"`, `rel="prev"`).
+
+    Changes to hours are also delivered as signed webhooks; see "Webhooks" below.
+servers:
+  - url: https://{account}.example.com/api/v1
+    variables:
+      account:
+        default: acme
+security:
+  - bearerAuth: []
+tags:
+  - name: Account
+  - name: Projects
+  - name: Hours
+  - name: Timer
+paths:
+  /me:
+    get:
+      tags: [Account]
+      summary: The user the token belongs to
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /projects:
+    get:
+      tags: [Projects]
+      summary: List projects
+      parameters:
+        - name: archived
+          in: query
+          description: Include archived projects
+          schema: { type: string, enum: ["true", "false"] }
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/per_page"
+      responses:
+        "200":
+          description: OK
+          headers:
+            X-Total-Count: { $ref: "#/components/headers/X-Total-Count" }
+            Link: { $ref: "#/components/headers/Link" }
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Project" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /projects/{id}:
+    get:
+      tags: [Projects]
+      summary: One project, with budget usage
+      parameters:
+        - $ref: "#/components/parameters/id"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Project" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /categories:
+    get:
+      tags: [Projects]
+      summary: List categories
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Category" }
+  /hours:
+    get:
+      tags: [Hours]
+      summary: List hours in the account, newest first
+      parameters:
+        - name: user_id
+          in: query
+          description: A user id, or `me`
+          schema: { type: string }
+        - name: project_id
+          in: query
+          schema: { type: integer }
+        - name: from
+          in: query
+          schema: { type: string, format: date }
+        - name: to
+          in: query
+          schema: { type: string, format: date }
+        - name: billed
+          in: query
+          schema: { type: string, enum: ["true", "false"] }
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/per_page"
+      responses:
+        "200":
+          description: OK
+          headers:
+            X-Total-Count: { $ref: "#/components/headers/X-Total-Count" }
+            Link: { $ref: "#/components/headers/Link" }
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Hour" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+    post:
+      tags: [Hours]
+      summary: Log hours as the token's user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [hour]
+              properties:
+                hour: { $ref: "#/components/schemas/HourInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Hour" }
+        "422": { $ref: "#/components/responses/Invalid" }
+  /hours/{id}:
+    parameters:
+      - $ref: "#/components/parameters/id"
+    get:
+      tags: [Hours]
+      summary: One entry
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Hour" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [Hours]
+      summary: Change one of your entries (refused while it is on an invoice)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [hour]
+              properties:
+                hour: { $ref: "#/components/schemas/HourInput" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Hour" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/Invalid" }
+    delete:
+      tags: [Hours]
+      summary: Delete one of your entries (refused while it is on an invoice)
+      responses:
+        "204": { description: Deleted }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/Invalid" }
+  /timer:
+    get:
+      tags: [Timer]
+      summary: Your running timer
+      responses:
+        "200":
+          description: Running
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Timer" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    post:
+      tags: [Timer]
+      summary: Start a timer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [timer]
+              properties:
+                timer:
+                  type: object
+                  required: [project_id, category_id]
+                  properties:
+                    project_id: { type: integer }
+                    category_id: { type: integer }
+                    description: { type: string }
+      responses:
+        "201":
+          description: Started
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Timer" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/Invalid" }
+    delete:
+      tags: [Timer]
+      summary: Discard the timer without logging time
+      responses:
+        "204": { description: Discarded }
+  /timer/stop:
+    post:
+      tags: [Timer]
+      summary: Stop the timer and log the time (rounded up to the next quarter hour)
+      responses:
+        "201":
+          description: Logged
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Hour" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/Invalid" }
+webhooks:
+  hour.created:
+    post:
+      summary: An hours entry was created (also hour.updated, hour.deleted, invoice.sent, invoice.paid)
+      description: |
+        POSTed to each endpoint subscribed to the event (Integrations page). Verify the
+        `Hours-Signature` header before trusting the body:
+
+        `t=<unix time>,v1=<hex HMAC-SHA256(secret, "<t>.<raw body>")>`
+
+        Reject deliveries whose `t` is more than 5 minutes old. Respond 2xx within 5 seconds;
+        other responses and timeouts are retried with backoff (5 attempts). 4xx responses other
+        than 408/429 are not retried.
+      parameters:
+        - name: Hours-Signature
+          in: header
+          required: true
+          schema: { type: string }
+        - name: Hours-Event
+          in: header
+          required: true
+          schema: { type: string }
+        - name: Hours-Delivery
+          in: header
+          required: true
+          description: Unique per event; the same across retries, for de-duplication
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebhookEvent" }
+      responses:
+        "200": { description: Received }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Personal API token (`hrs_...`)
+  parameters:
+    id:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }
+    page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    per_page:
+      name: per_page
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+  headers:
+    X-Total-Count:
+      schema: { type: integer }
+    Link:
+      description: RFC 8288 pagination links
+      schema: { type: string }
+  responses:
+    Unauthorized:
+      description: Missing, invalid or revoked token
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: Not found (or not yours to change)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    BadRequest:
+      description: Malformed parameters
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Invalid:
+      description: Validation failed; `details` maps fields to messages
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Conflict:
+      description: Conflicts with the current state
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string, examples: [invalid, not_found, unauthorized, rate_limited] }
+            message: { type: string }
+            details:
+              type: object
+              additionalProperties:
+                type: array
+                items: { type: string }
+    User:
+      type: object
+      required: [id, first_name, last_name, email]
+      additionalProperties: false
+      properties:
+        id: { type: integer }
+        first_name: { type: string }
+        last_name: { type: string }
+        email: { type: string, format: email }
+    Category:
+      type: object
+      required: [id, name]
+      additionalProperties: false
+      properties:
+        id: { type: integer }
+        name: { type: string }
+    Project:
+      type: object
+      required: [id, slug, name, billable, archived, client, currency, hourly_rate, budgets]
+      additionalProperties: false
+      properties:
+        id: { type: integer }
+        slug: { type: string }
+        name: { type: string }
+        billable: { type: boolean }
+        archived: { type: boolean }
+        client:
+          oneOf:
+            - type: "null"
+            - type: object
+              required: [id, name]
+              properties:
+                id: { type: integer }
+                name: { type: string }
+        currency: { type: string, pattern: "^[A-Z]{3}$" }
+        hourly_rate:
+          description: Decimal string in the project's currency
+          type: [string, "null"]
+          examples: ["95.0"]
+        budgets:
+          type: array
+          items:
+            type: object
+            required: [kind, used, limit, percentage, level]
+            additionalProperties: false
+            properties:
+              kind: { type: string, enum: [hours, amount] }
+              used:
+                description: Hours (number) or an amount (decimal string)
+                type: [number, string]
+              limit: { type: [number, string] }
+              percentage: { type: number }
+              level: { type: [string, "null"], enum: [warning, over, null] }
+    Hour:
+      type: object
+      required: [id, date, hours, description, project_id, category_id, user_id, billed, invoice_id, tags, created_at, updated_at]
+      additionalProperties: false
+      properties:
+        id: { type: integer }
+        date: { type: string, format: date }
+        hours:
+          description: Quarter-hour steps
+          type: number
+          multipleOf: 0.25
+        description: { type: string }
+        project_id: { type: integer }
+        category_id: { type: integer }
+        user_id: { type: integer }
+        billed: { type: boolean }
+        invoice_id: { type: [integer, "null"] }
+        tags:
+          type: array
+          items: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    HourInput:
+      type: object
+      properties:
+        project_id: { type: integer }
+        category_id: { type: integer }
+        hours: { type: number, multipleOf: 0.25, exclusiveMinimum: 0, maximum: 24 }
+        date: { type: string, format: date, description: Defaults to today }
+        description: { type: string, description: "#hashtags become tags" }
+    Timer:
+      type: object
+      required: [project_id, category_id, description, started_at, elapsed_seconds]
+      additionalProperties: false
+      properties:
+        project_id: { type: integer }
+        category_id: { type: integer }
+        description: { type: string }
+        started_at: { type: string, format: date-time }
+        elapsed_seconds: { type: integer }
+    WebhookEvent:
+      type: object
+      required: [id, event, created_at, data]
+      properties:
+        id: { type: string, format: uuid }
+        event: { type: string, enum: [hour.created, hour.updated, hour.deleted, invoice.sent, invoice.paid, ping] }
+        created_at: { type: string, format: date-time }
+        data:
+          description: The Hour (hour.*) or a summary of the invoice (invoice.*)
+          type: object

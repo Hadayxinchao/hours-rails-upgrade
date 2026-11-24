@@ -1,0 +1,57 @@
+.outer
+  .container.integrations
+    %h1= title
+
+    %section.integration-section
+      %h2= t("integrations.webhooks.title")
+      %p= t("integrations.webhooks.intro_html", docs: link_to("OpenAPI", api_openapi_path))
+      - if @endpoints.any?
+        %table.invoice-table
+          %tr
+            %th URL
+            %th= t("integrations.webhooks.events")
+            %th= t("integrations.webhooks.status")
+            %th
+          - @endpoints.each do |endpoint|
+            %tr
+              %td
+                %code= endpoint.url
+                %details
+                  %summary= t("integrations.webhooks.secret")
+                  %code= endpoint.secret
+              %td= endpoint.events.join(", ")
+              %td
+                - if !endpoint.active?
+                  %span.invoice-status.invoice-status--overdue= t("integrations.webhooks.disabled")
+                - elsif endpoint.last_error.present? || (endpoint.last_status && endpoint.last_status >= 300)
+                  %span.invoice-status.invoice-status--overdue= endpoint.last_status || t("integrations.webhooks.failed")
+                - elsif endpoint.last_delivered_at
+                  %span.invoice-status.invoice-status--paid= endpoint.last_status
+                - else
+                  %span.muted= t("integrations.webhooks.no_deliveries")
+                - if endpoint.last_error.present?
+                  .muted= endpoint.last_error
+              %td.amount
+                = button_to t("integrations.webhooks.ping"), ping_webhook_endpoint_path(endpoint), class: "button"
+                = button_to t("integrations.webhooks.delete"), webhook_endpoint_path(endpoint), method: :delete, class: "danger", data: { confirm: t("integrations.webhooks.confirm_delete") }
+      = form_with model: @endpoint, url: webhook_endpoints_path, class: "webhook-form" do |f|
+        = f.url_field :url, id: "webhook_endpoint_url", placeholder: "https://example.com/hooks/hours", required: true, "aria-label": "URL"
+        %fieldset.webhook-events
+          %legend= t("integrations.webhooks.events")
+          - WebhookEndpoint::EVENTS.each do |event|
+            %label
+              = check_box_tag "webhook_endpoint[events][]", event, @endpoint.events.include?(event), id: "webhook_event_#{event.tr('.', '_')}"
+              = event
+        = f.submit t("integrations.webhooks.add"), class: "button"
+
+    %section.integration-section
+      %h2= t("integrations.slack.title")
+      %p= t("integrations.slack.intro_html", url: content_tag(:code, @slack_command_url))
+      - if @slack
+        %p= t("integrations.slack.connected_to_html", team: content_tag(:code, @slack.team_id))
+        = button_to t("integrations.slack.disconnect"), slack_workspace_path, method: :delete, class: "danger"
+      - else
+        = form_with scope: :slack_workspace, url: slack_workspace_path, class: "slack-form" do |f|
+          = f.text_field :team_id, id: "slack_workspace_team_id", placeholder: "T0123ABCD", required: true, "aria-label": t("integrations.slack.team_id")
+          = f.submit t("integrations.slack.connect"), class: "button"
+      %p.muted= t("integrations.slack.usage")

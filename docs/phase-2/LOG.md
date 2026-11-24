@@ -132,3 +132,62 @@ a separate process appears in the open dashboard's feed, and inline editing save
 Verified on the demo stack: cutting a project's amount budget from $46,000 to $40,000 in the form
 sent "Webshop relaunch has used 83% of its budget" to the owner through Solid Queue (seen in
 Mailpit), with the amounts and a link into the account.
+
+## Step 4: API and integrations (tag `phase2/4-api`)
+
+### What was built
+
+| Area | Change |
+|---|---|
+| API tokens | Profile → API tokens: named personal tokens (`hrs_…`), shown once. Only a SHA-256 digest is stored; tokens can be revoked; last use is recorded (throttled to one write a minute) |
+| REST API v1 | `/api/v1`: `me`, projects (with budget usage), categories, hours (filters, create/update/delete own, invoiced entries locked), timer (start/stop/discard). JSON errors with a code and per-field details; `Link` + `X-Total-Count` pagination; 300 requests/minute per token via Rails 8 `rate_limit` on Solid Cache |
+| OpenAPI | [`docs/api/openapi.yaml`](../api/openapi.yaml) (3.1), served at `/api/v1/openapi.yaml` with the account's own server URL. Request specs validate every response against it (json_schemer), and a spec fails if a route is undocumented or a documented path doesn't exist |
+| Webhooks | Integrations (owner): endpoints subscribe to `hour.created/updated/deleted`, `invoice.sent/paid`. Signed (`Hours-Signature: t=…,v1=HMAC-SHA256`, Stripe-style), with a delivery id for de-duplication, retried with backoff on 5xx/408/429/timeouts, turned off after 15 consecutive failures, "Send test" button. Secrets are encrypted with Active Record Encryption |
+| Slack | `/hours 1.5h booking dev Fixed reminders #backend`, `start`, `stop`, `status`. Durations like 2h, 45m, 1h30m (rounded up to quarter hours); projects and categories by slug, name or a unique prefix. Requests verified with Slack's signature (and a 5-minute replay window); the workspace maps to the account, and a Slack user is linked to a Hours user through a signed, expiring link that only works on that account |
+
+### Security decisions
+
+- **SSRF:** webhook URLs are user input that the server will request. `WebhookUrlGuard` requires
+  https and no credentials in the URL. It resolves the host and refuses loopback, private,
+  link-local (including the cloud metadata address 169.254.169.254), CGNAT, multicast and IPv6
+  equivalents, including IPv4-mapped IPv6. It refuses if *any* answer is private. Delivery
+  connects to the checked IP (`Net::HTTP#ipaddr=`, TLS name unchanged), so DNS rebinding between
+  the check and the connection can't redirect it. It is checked on save and again on every
+  delivery.
+- **Tenant isolation** for the new entry points, each with a spec: API tokens live in the account
+  schema and the schema is chosen from the subdomain before the token lookup, so one account's
+  token is a 401 on another account's address. Slack link codes are signed, expire after 15
+  minutes and are rejected on any other account. Webhook delivery jobs are tenant-aware.
+- **Public demo:** every visitor is the owner, so creating webhooks and connecting Slack are
+  disabled in demo mode (otherwise the demo server could be used to POST to arbitrary URLs).
+  API tokens stay available.
+- **Keys:** Active Record Encryption keys come from `ACTIVE_RECORD_ENCRYPTION_*`, or are derived
+  from `SECRET_KEY_BASE`. If you rotate `SECRET_KEY_BASE`, set the old derived keys explicitly
+  first, or webhook secrets become unreadable (re-creating the webhooks also works).
+
+### Findings
+
+- **The production image didn't contain the OpenAPI file.** `Dockerfile.dockerignore` excludes
+  `docs/`, so `/api/v1/openapi.yaml` returned 500 in the image while every spec passed. Found by
+  calling it on the demo stack; `docs/api` is now re-included. (An inline comment on the same
+  line as the `!` pattern silently became part of the pattern on the first try.)
+- **Order-dependent failures from the existing suite.** Three old specs call `Timecop.scale(600)`
+  and never `Timecop.return`. Every later spec in the process ran with time 600× faster, so the
+  new rate-limit spec's one-minute counter expired mid-test, depending on test order. A global
+  `after { Timecop.return }` fixes it; the suite passed three times in a row afterwards.
+- **`rate_limit` keeps its store from class-load time**, so specs couldn't point it at a memory
+  store (the test env's cache is a null store, which never limits). A small delegating store module
+  solves it without test-only branches in the controller.
+- Rack is 2.2 here, so RSpec's `have_http_status(:unprocessable_content)` doesn't know the
+  symbol; Rails itself accepts it. Specs use 422.
+
+### Result
+
+411 examples, 0 failures (+45). Brakeman 0, bundler-audit 0, `zeitwerk:check` clean.
+Verified on the production-mode demo stack: a token created in the UI works against `/me`,
+`/projects` (pagination headers, budget usage) and `POST /hours` (201, tags from the description,
+422 with a field error for 1.1 h), and a wrong token gets 401. Signed Slack commands (generated
+like Slack signs them) went through linking in the browser, then `1.5h`, `50m` (rounded),
+`start`/`status`/`stop`. All of them appeared in the open dashboard's live feed. A forged
+signature got 401. Webhook delivery to an external receiver was verified with WebMock in specs
+rather than against a real third-party URL.

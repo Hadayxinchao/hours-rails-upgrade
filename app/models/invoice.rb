@@ -50,10 +50,12 @@ class Invoice < ApplicationRecord
 
   def mark_sent!
     transition!(from: "draft", to: "sent", sent_at: Time.current)
+    WebhookEvents.publish("invoice.sent", WebhookEvents.invoice(self))
   end
 
   def mark_paid!
     transition!(from: "sent", to: "paid", paid_at: Time.current)
+    WebhookEvents.publish("invoice.paid", WebhookEvents.invoice(self))
   end
 
   def void!

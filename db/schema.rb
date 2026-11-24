@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_26_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_27_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -47,6 +47,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_26_090000) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "api_tokens", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.string "name", null: false
+    t.string "token_digest", null: false
+    t.string "token_prefix", null: false
+    t.datetime "last_used_at"
+    t.datetime "revoked_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["token_digest"], name: "index_api_tokens_on_token_digest", unique: true
+    t.index ["user_id"], name: "index_api_tokens_on_user_id"
   end
 
   create_table "audits", force: :cascade do |t|
@@ -187,6 +200,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_26_090000) do
     t.index ["slug"], name: "index_projects_on_slug"
   end
 
+  create_table "slack_workspaces", force: :cascade do |t|
+    t.string "team_id", null: false
+    t.string "subdomain", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["subdomain"], name: "index_slack_workspaces_on_subdomain", unique: true
+    t.index ["team_id"], name: "index_slack_workspaces_on_team_id", unique: true
+  end
+
   create_table "taggings", force: :cascade do |t|
     t.integer "tag_id"
     t.integer "hour_id"
@@ -246,16 +268,32 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_26_090000) do
     t.integer "invited_by_id"
     t.string "invited_by_type"
     t.integer "invitations_count", default: 0
+    t.string "slack_user_id"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["invitation_token"], name: "index_users_on_invitation_token", unique: true
     t.index ["invitations_count"], name: "index_users_on_invitations_count"
     t.index ["invited_by_id"], name: "index_users_on_invited_by_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+    t.index ["slack_user_id"], name: "index_users_on_slack_user_id", unique: true
     t.index ["slug"], name: "index_users_on_slug"
+  end
+
+  create_table "webhook_endpoints", force: :cascade do |t|
+    t.string "url", null: false
+    t.text "secret", null: false
+    t.string "events", default: [], null: false, array: true
+    t.boolean "active", default: true, null: false
+    t.integer "consecutive_failures", default: 0, null: false
+    t.datetime "last_delivered_at"
+    t.integer "last_status"
+    t.string "last_error"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "api_tokens", "users", on_delete: :cascade
   add_foreign_key "budget_alerts", "projects", on_delete: :cascade
   add_foreign_key "hours", "invoices"
   add_foreign_key "invoice_lines", "invoices", on_delete: :cascade

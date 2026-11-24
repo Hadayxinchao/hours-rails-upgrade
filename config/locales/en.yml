@@ -1,5 +1,68 @@
 ---
 en:
+  slack:
+    help: "Usage: `/hours 1.5h <project> <category> [description]` · `/hours start <project> <category> [description]` · `/hours stop` · `/hours status`. Durations: 2h, 1.5h, 45m, 1h30m."
+    unknown_workspace: This Slack workspace isn't connected to an Hours account. The account owner can connect it under Integrations.
+    link_first: "Connect your Slack user to Hours first (link valid for 15 minutes): %{url}"
+    link_title: Connect Slack
+    link_confirm_html: "Connect Slack user %{slack_user} to %{user}? /hours will then log time as you."
+    link_button: Connect
+    linked: Slack connected. /hours now logs time as you.
+    invalid_link: This Slack link is invalid or expired. Run /hours in Slack again for a new one.
+    logged: "Logged %{hours} h of %{category} on %{project}."
+    rounded: " (rounded up to the next quarter hour)"
+    started: "Timer started on %{project} (%{category}). `/hours stop` to log it."
+    already_running: "A timer is already running on %{project}. `/hours stop` first."
+    no_timer: No timer is running.
+    today: "Today: %{hours} h logged."
+    running: "Timer running on %{project}: %{time}."
+    missing_project: "Which project? `/hours 1h <project> <category>`"
+    missing_category: "Which category? `/hours 1h <project> <category>`"
+    unknown_project: "No project matches \"%{word}\"."
+    unknown_category: "No category matches \"%{word}\"."
+    ambiguous: "\"%{word}\" matches several: %{options}. Type more of the name."
+  integrations:
+    webhooks:
+      title: Webhooks
+      intro_html: "Hours POSTs signed JSON to these URLs when entries or invoices change. How to verify the signature: %{docs} (webhooks section)."
+      events: Events
+      status: Last delivery
+      secret: Signing secret
+      disabled: disabled after repeated failures
+      failed: failed
+      no_deliveries: no deliveries yet
+      ping: Send test
+      pinged: Test event queued
+      delete: Delete
+      confirm_delete: Delete this webhook?
+      add: Add webhook
+      created: Webhook added
+      deleted: Webhook deleted
+    slack:
+      title: Slack
+      intro_html: "Create a Slack app with a slash command <code>/hours</code> whose request URL is %{url}, set its signing secret as SLACK_SIGNING_SECRET on the server, then enter your workspace's team ID here."
+      team_id: Slack team ID
+      connect: Connect workspace
+      connected: Slack workspace connected
+      disconnect: Disconnect
+      disconnected: Slack workspace disconnected
+      connected_to_html: "Connected to workspace %{team}."
+      usage: "In Slack: /hours 1.5h booking-app development Fixed reminders #backend · /hours start booking-app development · /hours stop · /hours status. The first time, /hours replies with a link that connects your Slack user to your Hours user."
+  api_tokens:
+    intro_html: "Personal tokens for the REST API (%{docs}). Send one as <code>Authorization: Bearer &lt;token&gt;</code> to this account's address. A token acts as you; revoke it when it's no longer needed."
+    copy_now: "Copy this token now. It won't be shown again:"
+    name: Name
+    name_placeholder: What is this token for? (e.g. "Laptop CLI")
+    create: Create token
+    created: Token created
+    token: Token
+    last_used: Last used
+    never: never
+    ago: "%{time} ago"
+    revoke: Revoke
+    revoked: Token revoked
+    revoked_label: revoked
+    confirm_revoke: Revoke this token? Anything using it stops working.
   budget_mailer:
     subject:
       warning: "%{project} has used %{percent}% of its %{budget}"
@@ -351,6 +414,11 @@ en:
     clients:
       index: Clients
       new: New Client
+    api_tokens:
+      index: API tokens
+      create: API tokens
+    integrations:
+      show: Integrations
     invoices:
       index: Invoices
       new: New Invoice

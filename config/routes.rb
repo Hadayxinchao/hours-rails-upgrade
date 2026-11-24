@@ -19,6 +19,9 @@ class SubdomainBlank
 end
 
 Hours::Application.routes.draw do
+  # Slack calls one URL for all workspaces, with or without a subdomain.
+  post "integrations/slack/commands" => "slack_commands#create"
+
   if Hours.single_tenant_mode?
     root "projects#index"
     draw :subdomain_present

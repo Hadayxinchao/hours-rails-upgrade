@@ -2,7 +2,9 @@
 log/*
 tmp/*
 coverage/
-docs/
+# docs/api/openapi.yaml is served at /api/v1/openapi.yaml
+docs/*
+!docs/api
 storage/*
 public/assets
 .env

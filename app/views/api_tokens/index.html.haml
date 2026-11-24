@@ -1,0 +1,29 @@
+.outer
+  .container.api-tokens
+    %h1= title
+    %p= t("api_tokens.intro_html", docs: link_to("OpenAPI", "/api/v1/openapi.yaml"))
+    - if @new_token
+      .api-token-reveal
+        %p= t("api_tokens.copy_now")
+        %code#new-api-token= @new_token
+    = form_with scope: :api_token, url: api_tokens_path, class: "api-token-form" do |f|
+      = f.text_field :name, id: "api_token_name", placeholder: t("api_tokens.name_placeholder"), required: true, maxlength: 60, "aria-label": t("api_tokens.name")
+      = f.submit t("api_tokens.create"), class: "button"
+    - if @tokens.any?
+      %table.invoice-table
+        %tr
+          %th= t("api_tokens.name")
+          %th= t("api_tokens.token")
+          %th= t("api_tokens.last_used")
+          %th
+        - @tokens.each do |token|
+          %tr{ class: ("revoked" if token.revoked_at) }
+            %td= token.name
+            %td
+              %code= "#{token.token_prefix}…"
+            %td= token.last_used_at ? t("api_tokens.ago", time: time_ago_in_words(token.last_used_at)) : t("api_tokens.never")
+            %td.amount
+              - if token.revoked_at
+                = t("api_tokens.revoked_label")
+              - else
+                = button_to t("api_tokens.revoke"), api_token_path(token), method: :delete, class: "danger", data: { confirm: t("api_tokens.confirm_revoke") }

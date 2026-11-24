@@ -42,6 +42,9 @@ class Hour < Entry
 
   before_save :set_tags_from_description
   after_create_commit -> { BroadcastActivityJob.perform_later(self) }
+  after_create_commit -> { WebhookEvents.publish("hour.created", ApiSerializer.hour(self)) }
+  after_update_commit -> { WebhookEvents.publish("hour.updated", ApiSerializer.hour(self)) }
+  after_destroy_commit -> { WebhookEvents.publish("hour.deleted", ApiSerializer.hour(self)) }
 
   def tag_list
     tags.map(&:name).join(", ")

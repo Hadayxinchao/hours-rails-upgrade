@@ -78,4 +78,5 @@ group :test do
   gem "simplecov", require: false
   gem "timecop"
   gem "webmock"
+  gem "json_schemer", "~> 2.4" # validates API responses against docs/api/openapi.yaml
 end

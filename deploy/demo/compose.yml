@@ -24,6 +24,8 @@ x-app-env: &env
   SMTP_DOMAIN: ${DEMO_HOST:-hoursdemo.hadayxinchao.com}
   SMTP_USERNAME: demo
   SMTP_PASSWORD: demo
+  # Optional: the signing secret of a Slack app whose /hours command points here.
+  SLACK_SIGNING_SECRET: ${SLACK_SIGNING_SECRET:-}
   S3_BUCKET_NAME: unused
   AWS_ACCESS_KEY_ID: unused
   AWS_SECRET_ACCESS_KEY: unused

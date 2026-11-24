@@ -58,6 +58,7 @@ class User < ApplicationRecord
   belongs_to :organization, class_name: "Account", inverse_of: :users
   has_many :hours
   has_one :timer, dependent: :destroy
+  has_many :api_tokens, dependent: :delete_all
   has_many :mileages
   has_many :projects, -> { distinct }, through: :hours
 

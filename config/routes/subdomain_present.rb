@@ -14,6 +14,28 @@ resources :reports, only: [:index]
 
 resources :billables, only: [:index]
 
+resources :api_tokens, only: %i[index create destroy]
+resource :integrations, only: [:show]
+resources :webhook_endpoints, only: %i[create destroy] do
+  post :ping, on: :member
+end
+resource :slack_workspace, only: %i[create destroy]
+get "integrations/slack/link" => "slack_links#show", as: :slack_link
+post "integrations/slack/link" => "slack_links#create"
+
+namespace :api, defaults: { format: :json } do
+  namespace :v1 do
+    get "me" => "me#show"
+    resources :projects, only: %i[index show]
+    resources :categories, only: [:index]
+    resources :hours, only: %i[index show create update destroy]
+    resource :timer, only: %i[show create destroy] do
+      post :stop
+    end
+  end
+end
+get "api/v1/openapi.yaml" => "api_docs#show", as: :api_openapi
+
 resource :timer, only: %i[create destroy] do
   post :stop
 end

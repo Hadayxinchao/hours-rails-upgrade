@@ -67,7 +67,7 @@ The follow-up work a client usually asks for next, done the same way (small step
 | 1. Invoicing | [`phase2/1-invoicing`](../../tree/phase2/1-invoicing) | ✅ | Rates per project, invoices from billable entries, PDF, draft → sent → paid / void, invoiced entries locked; numbering proven race-free with a concurrent spec |
 | 2. Timer and Hotwire | [`phase2/2-timer`](../../tree/phase2/2-timer) | ✅ | Running timer and quarter hours; live activity feed over Solid Cable; inline editing with Turbo Streams; WebSocket auth and broadcasts made tenant-aware; found that the hop-5 single-database fallback never worked |
 | 3. Budget alerts | [`phase2/3-budget-alerts`](../../tree/phase2/3-budget-alerts) | ✅ | Budgets in money as well as hours, meters on project pages, email at 80% / 100% exactly once (`ON CONFLICT DO NOTHING RETURNING`), re-armed when usage drops |
-| 4. API and integrations | | ⏳ | REST API with tokens, webhooks, Slack `/hours` |
+| 4. API and integrations | [`phase2/4-api`](../../tree/phase2/4-api) | ✅ | REST API with personal tokens, rate limit and an [OpenAPI document](docs/api/openapi.yaml) that every response is validated against; signed webhooks with SSRF protection; Slack `/hours` |
 | 5. AI assistance | | ⏳ | Natural-language time entry, weekly client summary |
 | 6. Operations | | ⏳ | Kamal, error tracking, OpenTelemetry, tested backups |
 
@@ -90,7 +90,7 @@ All three versions rebuilt from their own commits and benchmarked back to back (
 | Known gem vulnerabilities (bundler-audit) | 167 (4 critical, 43 high) | **0** |
 | Brakeman warnings | 8 (and missed 1 critical) | **0** |
 | App bugs found and fixed | | **5**: data wipe via one URL, CSV ignoring filters, report filters 500ing, public hardcoded Devise secret, broken production cache |
-| Specs | 280 | **366**, 0 deprecation warnings |
+| Specs | 280 | **411**, 0 deprecation warnings |
 | SQL statements for the CSV export | 89,006 | **13** |
 | Inviting a user (request time) | SMTP inside the request | 0.13 s (Solid Queue) |
 | Infrastructure | Postgres + memcached + idle Delayed Job worker | Postgres only (Solid Queue, Solid Cache) |
