@@ -7,7 +7,7 @@ A documented, step-by-step upgrade of a real, abandoned Rails SaaS app: from **R
 
 [![CI](https://github.com/Hadayxinchao/hours-rails-upgrade/actions/workflows/ci.yml/badge.svg)](https://github.com/Hadayxinchao/hours-rails-upgrade/actions/workflows/ci.yml)
 
-**Status:** ✅ Upgrade done, now on **Rails 8.1.4 / Ruby 3.4.12**. 🚧 Performance pass next (hop 6). See [Results](#results).
+**Status:** ✅ Done: **Rails 8.1.4 / Ruby 3.4.12**, 0 known vulnerabilities, CSV export **22× faster**. See [Results](#results).
 
 ---
 
@@ -54,35 +54,37 @@ Full plan: [`docs/case-study/UPGRADE_PLAN.md`](docs/case-study/UPGRADE_PLAN.md)
 | 3b. Rails 6.1, Ruby 3.0, Puma | [`hop/3b-rails-6.1`](../../tree/hop/3b-rails-6.1) | ✅ | **Found and fixed a critical bug: any user could wipe an account's data via one URL**; Unicorn → Puma |
 | 4. Rails 7.0 → 7.2, Ruby 3.3 | [`hop/4-rails-7.2`](../../tree/hop/4-rails-7.2) | ✅ | Ruby Sass → Dart Sass, CoffeeScript → JS; caught a silent CSS layout regression by diffing compiled CSS; fixed a broken production cache |
 | 5. Rails 8.1, Ruby 3.4 | [`hop/5-rails-8.1`](../../tree/hop/5-rails-8.1) | ✅ | Delayed Job (never used) → Solid Queue with tenant-aware jobs; Solid Cache; removed a public hardcoded Devise secret; production Docker image; GitHub Actions |
-| 6. Performance pass | | ⏳ | CSV export, Billables and Dashboard N+1s, indexes |
+| 6. Performance pass | [`hop/6-performance`](../../tree/hop/6-performance) | ✅ | N+1s hidden by the query cache (89,006 → 13 queries on CSV export); HAML 6; caught a form regression from the upgrade by diffing DOMs |
 
 Every finding along the way is logged in [`docs/case-study/UPGRADE_LOG.md`](docs/case-study/UPGRADE_LOG.md).
 
 ### Results
 
-Same seed data (20k hours), same 9 pages, same script, same Postgres 9.6, production mode, single process. "Upgrade only" means no application-level performance work yet.
+All three versions rebuilt from their own commits and benchmarked back to back (same seed data with 20k hours, same 9 pages, same script, same Postgres 9.6, production mode, single process). Method and raw data: [`docs/case-study/final/`](docs/case-study/final).
 
-| Metric | Before (Rails 5.0 / Ruby 2.4) | After upgrade (Rails 8.1 / Ruby 3.4) |
+| Page (p50) | Before: Rails 5.0 / Ruby 2.4 | Upgrade only: Rails 8.1 / Ruby 3.4 | Upgrade + performance pass |
+|---|---:|---:|---:|
+| Reports CSV export (23k rows) | 37,997 ms | 20,002 ms | **1,735 ms (21.9× faster)** |
+| Billables (~10k rows) | 3,318 ms | 2,114 ms | **540 ms (6.1×)** |
+| Dashboard | 655 ms | 543 ms | **165 ms (4.0×)** |
+| Client detail | 374 ms | 240 ms | **120 ms (3.1×)** |
+| Project detail | 184 ms | 138 ms | **87 ms (2.1×)** |
+| Reports | 143 ms | 107 ms | **86 ms (1.7×)** |
+| Process memory | 833 MB | 453 MB | **358 MB (−57%)** |
+
+| | Before | After |
 |---|---:|---:|
 | Known gem vulnerabilities (bundler-audit) | 167 (4 critical, 43 high) | **0** |
 | Brakeman warnings | 8 (and missed 1 critical) | **0** |
-| Critical app bugs found and fixed | | **4** (data wipe via URL, CSV ignoring filters, filters 500ing, public Devise secret) |
-| Specs passing | 280 / 280 | **297 / 297**, 0 deprecation warnings |
-| Reports CSV export p50 | 34,657 ms | 18,394 ms (1.9× faster) |
-| Billables p50 | 2,793 ms | 1,767 ms (1.6×) |
-| Dashboard p50 | 548 ms | 461 ms (1.2×) |
-| User entries p50 | 136 ms | 74 ms (1.8×) |
-| Reports p50 | 113 ms | 72 ms (1.6×) |
-| Ruby objects allocated (CSV export) | 38.4 M | 12.8 M (−67%) |
-| Process memory after benchmark | 887 MB | **449 MB** (−49%) |
+| App bugs found and fixed | | **5**: data wipe via one URL, CSV ignoring filters, report filters 500ing, public hardcoded Devise secret, broken production cache |
+| Specs | 280 | **298**, 0 deprecation warnings |
+| SQL statements for the CSV export | 89,006 | **13** |
 | Inviting a user (request time) | SMTP inside the request | 0.13 s (Solid Queue) |
-| Locked gems | 290 | 175 |
 | Infrastructure | Postgres + memcached + idle Delayed Job worker | Postgres only (Solid Queue, Solid Cache) |
+| Locked gems | 290 | 175 |
 | CI | Travis (dead) | GitHub Actions: specs, Brakeman, bundler-audit, image build |
 
-Raw data: [`baseline/`](docs/case-study/baseline) and [`after-upgrade/`](docs/case-study/after-upgrade).
-
-Baseline details: [`docs/case-study/BASELINE.md`](docs/case-study/BASELINE.md)
+Honest note: one regression introduced *by* the upgrade reached the code. HAML 5.1 with the new Rails output buffer printed the project form a second time as escaped text. It was caught during the performance pass by diffing rendered pages, and fixed with a regression spec. See the [upgrade log](docs/case-study/UPGRADE_LOG.md).
 
 ## Run it yourself
 
@@ -119,7 +121,7 @@ To compare with the original code, check out `hop/0-baseline` and use `docker/le
 | [`docs/case-study/`](docs/case-study) | Plan, baseline, upgrade log, raw audit/benchmark output |
 | [`docker/app/`](docker/app) | Current upgrade-target environment (app, tests, benchmark, web) |
 | [`docker/legacy/`](docker/legacy) | Frozen original Ruby 2.4 environment used for the baseline |
-| [`script/benchmark/`](script/benchmark) | Deterministic seed data + request benchmark |
+| [`script/benchmark/`](script/benchmark) | Deterministic seed data, request benchmark, SQL profiler (counts query-cache hits) |
 | [`script/compare_css.py`](script/compare_css.py) | Semantic diff used to prove the Sass migration kept the CSS identical |
 | [`Dockerfile`](Dockerfile), [`docker-compose.yml`](docker-compose.yml) | Production image and stack |
 | [`docs/ORIGINAL_README.md`](docs/ORIGINAL_README.md) | The upstream project's README |

@@ -218,3 +218,44 @@ Verified in production mode: job enqueued with `tenant=acme`, processed by `bin/
 - Brakeman 4.7 (2019) → 8.1. `protect_from_forgery` → `with: :exception`. The `:hybrid` cookie serializer is kept for this release so existing `:marshal` cookies are migrated, and recorded in `config/brakeman.ignore` with a note to switch to `:json` afterwards.
 
 Result: **297 examples, 0 failures, 0 deprecation warnings, 0 Ruby warnings. bundler-audit: 0 advisories. Brakeman: 0 warnings.**
+
+## Hop 6: performance pass (tag `hop/6-performance`)
+
+### Finding the real problem
+
+The benchmark's SQL counts left out query-cache hits, so the CSV export looked harmless at 96 queries. `script/benchmark/sql_profile.rb` counts every statement:
+
+| Page | Statements (cache hits) | Pattern |
+|---|---:|---|
+| CSV export | **89,006** (88,908) | 4 lookups per row (user, project, client, category) × 23k rows |
+| Dashboard | 1,769 (1,557) | 2 `SUM` per category, recomputed 3× per project by the presenter |
+| Billables | 1,405 (1,190) | `EXISTS` ×2 per project in the controller *and again in the view*, user per row |
+
+Cache hits are cheap in SQL time but each one still instantiates an Active Record object. That is where the 38 M allocations of the CSV export came from.
+
+### Fixes
+
+| Page | Change | Queries | Verified |
+|---|---|---|---|
+| CSV export | `EntryCSVGenerator` preloads `user`, `category`, `project: :client` (covers both export endpoints) | 89,006 → **13** | Exports byte-identical to the old code (3 exports, 26k lines) |
+| Billables | All unbilled entries in two queries grouped by project; memoized user links and date labels for the ~10k rows | 1,405 → **13** | Rendered HTML byte-identical |
+| Dashboard | `Project#sorted_categories` from one `GROUP BY category_id` per project (memoized, same rounding and sort key); presenter memoizes its category list; `project.users` loaded once; client and activity feed preloaded | 1,769 → **66** | DOM identical |
+| All pages | HAML 5.1 → 6.4 (Hamlit-based): about 40% less view time on render-heavy pages | | DOM of 18 pages compared |
+
+### A regression from the upgrade itself, found here
+
+Comparing HAML 5 and HAML 6 output showed that, on HAML 5.1 with the newer Rails output buffer, **the project form re-emitted its whole content as escaped text** after the custom `SwitchInput`. Users would have seen raw `<div class=...>` markup under the billable switch on "New/Edit project". Rendering the same form on the original 2020 stack shows no such text, so the regression came in during the Rails 7.x hops. The specs missed it because the real inputs were still present. HAML 6 fixes it, and a feature spec now asserts that the form has no escaped markup and that each input appears once (it fails on HAML 5.1).
+
+### Result (same session, all three versions rebuilt from their commits)
+
+| Page | Before | Upgrade only | Optimized |
+|---|---:|---:|---:|
+| CSV export | 37,997 ms | 20,002 ms | **1,735 ms (21.9×)** |
+| Billables | 3,318 ms | 2,114 ms | **540 ms (6.1×)** |
+| Dashboard | 655 ms | 543 ms | **165 ms (4.0×)** |
+| Client detail | 374 ms | 240 ms | **120 ms (3.1×)** |
+| Memory | 833 MB | 453 MB | **358 MB** |
+
+Full table and method: [`final/README.md`](final/README.md). 298 examples, 0 failures.
+
+Not done (product decisions): Billables still renders every unbilled entry on one page (≈2.4 MB of HTML on the benchmark account); paginating or collapsing per project would make it instant, but changes how people bill. Fragment caching (`localized_cache`) already exists in the views and helps further in production with `PERFORM_CACHING=1`; the benchmark keeps it off, as the baseline did.

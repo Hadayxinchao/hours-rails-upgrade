@@ -1,0 +1,90 @@
+{
+  "ruby": "3.4.12",
+  "rails": "8.1.4.1",
+  "iterations": 30,
+  "measured_at": "2026-11-24T04:07:58Z",
+  "rss_mb": 358.0,
+  "pages": [
+    {
+      "page": "Dashboard (projects + activity)",
+      "path": "/",
+      "samples": 30,
+      "p50_ms": 164.6,
+      "p95_ms": 287.6,
+      "queries": 65,
+      "allocations": 91333
+    },
+    {
+      "page": "Project detail",
+      "path": "/projects/project-1",
+      "samples": 30,
+      "p50_ms": 87.2,
+      "p95_ms": 131.9,
+      "queries": 85,
+      "allocations": 36491
+    },
+    {
+      "page": "Reports",
+      "path": "/reports",
+      "samples": 30,
+      "p50_ms": 85.5,
+      "p95_ms": 137.3,
+      "queries": 76,
+      "allocations": 42109
+    },
+    {
+      "page": "Reports CSV export (23k rows)",
+      "path": "/reports.csv",
+      "samples": 30,
+      "p50_ms": 1735.1,
+      "p95_ms": 1938.7,
+      "queries": 12,
+      "allocations": 1632883
+    },
+    {
+      "page": "User entries",
+      "path": "/users/user1-bench/entries",
+      "samples": 30,
+      "p50_ms": 90.8,
+      "p95_ms": 100.1,
+      "queries": 87,
+      "allocations": 42995
+    },
+    {
+      "page": "Client detail",
+      "path": "/clients/1",
+      "samples": 30,
+      "p50_ms": 119.6,
+      "p95_ms": 143.9,
+      "queries": 104,
+      "allocations": 56826
+    },
+    {
+      "page": "Team",
+      "path": "/users",
+      "samples": 30,
+      "p50_ms": 15.3,
+      "p95_ms": 28.0,
+      "queries": 6,
+      "allocations": 4585
+    },
+    {
+      "page": "Billables",
+      "path": "/billables",
+      "samples": 30,
+      "p50_ms": 539.5,
+      "p95_ms": 623.6,
+      "queries": 13,
+      "allocations": 434243
+    },
+    {
+      "page": "Tag detail",
+      "path": "/tags/tag1",
+      "samples": 30,
+      "p50_ms": 105.3,
+      "p95_ms": 140.2,
+      "queries": 80,
+      "allocations": 22685
+    }
+  ]
+}
