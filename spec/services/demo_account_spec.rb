@@ -13,6 +13,7 @@ describe DemoAccount do
       expect(owner).to be_confirmed
       expect(owner.valid_password?(DemoAccount::PASSWORD)).to be true
       expect(User.count).to eq 6
+      expect(User.find_by!(email: "tom@example.com").last_name).to eq "de Vries"
       expect(Project.count).to eq 7
       expect(Hour.maximum(:date)).to be >= Date.current - 3
       expect(Hour.where(billed: false)).to exist

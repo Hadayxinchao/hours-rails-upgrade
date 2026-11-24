@@ -10,7 +10,7 @@ class DemoAccount
   DAYS = 120
 
   PEOPLE = [
-    %w[Demo User], %w[Linh Tran], %w[Sam Becker], %w[Maya Patel], %w[Tom de Vries], %w[Ana Costa]
+    ["Demo", "User"], ["Linh", "Tran"], ["Sam", "Becker"], ["Maya", "Patel"], ["Tom", "de Vries"], ["Ana", "Costa"]
   ].freeze
   CLIENTS = {
     "Northwind Traders" => "Wholesale food distributor",
