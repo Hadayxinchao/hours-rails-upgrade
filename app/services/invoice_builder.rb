@@ -107,6 +107,7 @@ class InvoiceBuilder
 
   def line(project, kind, description, quantity, unit_price_cents)
     { project: project, kind: kind, description: description, quantity: quantity,
-      unit_price_cents: unit_price_cents, amount_cents: quantity * unit_price_cents }
+      unit_price_cents: unit_price_cents,
+      amount_cents: (BigDecimal(quantity.to_s) * unit_price_cents).round(0, :half_up).to_i }
   end
 end

@@ -15,11 +15,11 @@ class EntryStats
   end
 
   def hours_for_subject
-    hour_entries_for_subject.sum(:value)
+    HoursValue.normalize(hour_entries_for_subject.sum(:value))
   end
 
   def total_hours
-    @entries.sum(:value)
+    HoursValue.normalize(@entries.sum(:value))
   end
 
   def hours_for_subject_collection(collection)

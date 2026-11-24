@@ -1,0 +1,14 @@
+-# Inline edit form, swapped in for the row by a Turbo Stream.
+%tr.info-row.editing{ id: dom_id(entry) }
+  %td{ colspan: 7 }
+    = form_with model: entry, url: hour_path(entry), method: :patch, class: "inline-entry-form", data: { turbo: "true" } do |f|
+      - if entry.errors.any?
+        %p.inline-entry-errors= entry.errors.full_messages.to_sentence
+      = f.date_field :date, value: entry.date&.iso8601, required: true, id: "inline_hour_date_#{entry.id}", "aria-label": t("entries.index.date")
+      = f.collection_select :project_id, Project.unarchived.by_name, :id, :name, {}, id: "inline_hour_project_#{entry.id}", "aria-label": t("entries.index.project")
+      = f.number_field :value, min: 0.25, max: 24, step: 0.25, required: true, id: "inline_hour_value_#{entry.id}", "aria-label": t("entries.index.hours")
+      = f.collection_select :category_id, Category.by_name, :id, :name, {}, id: "inline_hour_category_#{entry.id}", "aria-label": t("entries.index.category")
+      = f.text_field :description, id: "inline_hour_description_#{entry.id}", "aria-label": t("entries.index.description")
+      .inline-entry-actions
+        = f.submit t("helpers.submit.update"), class: "button"
+        = link_to t("entries.index.cancel"), edit_hour_path(entry, cancel: 1), data: { turbo: "true", turbo_stream: true }

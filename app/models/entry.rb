@@ -6,8 +6,7 @@ class Entry < ApplicationRecord
   include Twitter::Extractor
 
   validates :user, :project, :date, presence: true
-  validates :value, presence: true, numericality: { greater_than: 0,
-                                                    only_integer: true }
+  validates :value, presence: true
 
   audited allow_mass_assignment: true
 

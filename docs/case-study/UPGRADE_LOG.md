@@ -201,7 +201,7 @@ Brakeman: 3 → **2** (EOL Rails 7.2, `:hybrid` cookies).
 - Now: Active Job on **Solid Queue** (`bin/jobs`, or in Puma with `SOLID_QUEUE_IN_PUMA=1`), and Devise emails use `deliver_later`.
 - **Multi-tenancy trap:** jobs run outside a request, so they don't know the account schema. A Devise mail job would look up its user in the wrong schema, which either fails or finds *another account's* user with the same id. `TenantAwareJob` stores the Apartment tenant when the job is enqueued and wraps the whole `perform_now` in it (Active Job deserializes GlobalID arguments before `around_perform` runs, so a callback is too late). A spec reproduces `Couldn't find User with 'id'=1` without it.
 - **Solid Cache** replaces dalli + memcachier. Cache keys already include the subdomain.
-- `config/database.yml` is now committed and env-driven, with `primary` / `cache` / `queue` databases in production (cache and queue fall back to `DATABASE_URL`, so a single-database deploy still works).
+- `config/database.yml` is now committed and env-driven, with `primary` / `cache` / `queue` databases in production. ~~cache and queue fall back to `DATABASE_URL`, so a single-database deploy still works~~ **Correction (phase 2):** that fallback never worked: `db:prepare` doesn't load the Solid schemas into an existing database. They now default to separate `<primary>_cache` / `_queue` / `_cable` databases; see [phase 2 log](../phase-2/LOG.md).
 - `delayed_jobs` table dropped (per tenant, via Apartment's migration hook).
 
 Verified in production mode: job enqueued with `tenant=acme`, processed by `bin/jobs`, and the email received by a real SMTP server (Mailpit). Solid Cache read/write OK.

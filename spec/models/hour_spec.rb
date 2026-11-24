@@ -6,7 +6,7 @@
 #  project_id  :integer          not null
 #  category_id :integer          not null
 #  user_id     :integer          not null
-#  value       :integer          not null
+#  value       :decimal(6, 2)    not null
 #  date        :date             not null
 #  created_at  :datetime
 #  updated_at  :datetime
@@ -22,7 +22,19 @@ describe Hour do
     it { should validate_presence_of :value }
     it { should validate_presence_of :date }
     it { should validate_numericality_of(:value).is_greater_than(0) }
-    it { should validate_numericality_of(:value).only_integer }
+    it { should validate_numericality_of(:value).is_less_than_or_equal_to(24) }
+
+    it "accepts quarter hours and rejects other fractions" do
+      expect(build(:hour, value: "1.25")).to be_valid
+      hour = build(:hour, value: "1.1")
+      expect(hour).not_to be_valid
+      expect(hour.errors[:value]).to include(I18n.t("errors.messages.quarter_hours"))
+    end
+
+    it "reads whole hours as Integer and fractions as Float" do
+      expect(create(:hour, value: 3).reload.value).to eql 3
+      expect(create(:hour, value: "1.5").reload.value).to eql 1.5
+    end
   end
 
   describe "associations" do

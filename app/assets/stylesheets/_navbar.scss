@@ -240,3 +240,11 @@ $header-border-color: #ddd;
     }
   }
 }
+
+// Running timer badge (phase 2)
+.timer-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}

@@ -2,10 +2,14 @@
   - @history.audits.each do |audit|
     %li.audit
       = time_tag audit.created_at
-      = render "application/avatar", user: audit.user, easter: easter?
-      %strong
-        = link_to user_entries_path(audit.user) do
-          = audit.user.full_name
+      -# Changes made outside a request (console, import, job) have no user.
+      - if audit.user
+        = render "application/avatar", user: audit.user, easter: easter?
+        %strong
+          = link_to user_entries_path(audit.user) do
+            = audit.user.full_name
+      - else
+        %strong= t("audits.system")
       = t("audits.actions.#{audit.action}")
       - if audit.creation?
         =  audit.auditable_type

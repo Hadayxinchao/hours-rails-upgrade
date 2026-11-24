@@ -14,6 +14,10 @@ resources :reports, only: [:index]
 
 resources :billables, only: [:index]
 
+resource :timer, only: %i[create destroy] do
+  post :stop
+end
+
 resources :invoices, only: %i[index new create show destroy] do
   member do
     patch :mark_sent

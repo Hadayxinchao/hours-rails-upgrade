@@ -3,6 +3,7 @@
     %ul
       = nav_path t("titles.projects.index"), root_path
       = nav_path t("navbar.entries"), user_entries_path(current_user)
+      = render "timers/indicator", timer: current_user.timer
   - localized_cache current_user do
     .nav-user
       %ul

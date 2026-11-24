@@ -1,7 +1,21 @@
 ---
 en:
+  timers:
+    title: Timer
+    start: Start timer
+    stop: Stop and log
+    discard: Discard
+    confirm_discard: Discard this timer without logging the time?
+    running: Running
+    description_placeholder: "What are you working on? #tags work too"
+    started: Timer started
+    already_running: A timer is already running
+    logged: "Logged %{hours} h on %{project}"
+    discarded: Timer discarded
   errors:
     messages:
+      quarter_hours: must be in steps of 0.25 (15 minutes)
+      timer_too_long: The timer ran for more than 24 hours. Discard it and log the time by hand.
       invoiced: "This entry is on invoice %{number}; void the invoice before changing it"
   invoices:
     mileage_line: Mileage (km)
@@ -65,6 +79,7 @@ en:
     saturday: Saturday
     sunday: Sunday
   audits:
+    system: System
     nothing: nothing
     title: Audit Log
     date: "Date:"
@@ -182,6 +197,7 @@ en:
   entries:
     download_csv: Download all entries as CSV
     index:
+      cancel: Cancel
       category: Category
       date: Date
       delete: delete

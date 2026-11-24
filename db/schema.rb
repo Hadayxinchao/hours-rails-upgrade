@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_24_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_25_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -93,7 +93,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_24_100000) do
     t.integer "project_id", null: false
     t.integer "category_id", null: false
     t.integer "user_id", null: false
-    t.integer "value", null: false
+    t.decimal "value", precision: 6, scale: 2, null: false
     t.date "date", null: false
     t.datetime "created_at"
     t.datetime "updated_at"
@@ -193,6 +193,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_24_100000) do
     t.index ["slug"], name: "index_tags_on_slug"
   end
 
+  create_table "timers", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.integer "project_id", null: false
+    t.integer "category_id", null: false
+    t.string "description"
+    t.datetime "started_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["category_id"], name: "index_timers_on_category_id"
+    t.index ["project_id"], name: "index_timers_on_project_id"
+    t.index ["user_id"], name: "index_timers_on_user_id", unique: true
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "first_name", default: "", null: false
     t.string "last_name", default: "", null: false
@@ -237,4 +250,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_24_100000) do
   add_foreign_key "invoice_lines", "projects"
   add_foreign_key "invoices", "clients"
   add_foreign_key "mileages", "invoices"
+  add_foreign_key "timers", "categories"
+  add_foreign_key "timers", "projects"
+  add_foreign_key "timers", "users"
 end

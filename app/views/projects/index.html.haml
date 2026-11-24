@@ -2,6 +2,8 @@
   .wrapper
     .projects-overview
       .new-entry-wrapper
+        %h2= t("timers.title")
+        = render "timers/panel", timer: current_user.timer
         %h2= t("entries.index.new")
         .projects-tabs-container
           %ul.accordion-tabs
@@ -27,6 +29,7 @@
       .new-project
         = link_to t("titles.projects.new"), new_project_path, id: "new-project-button", class: "button create"
     .activity-feed
-      %ul
+      = turbo_stream_from(*BroadcastActivityJob.stream(Apartment::Tenant.current))
+      %ul#activity-feed-list
         - localized_cache [cache_key_for_all(:hours), current_locale] do
           = render partial: "entry", collection: @activities

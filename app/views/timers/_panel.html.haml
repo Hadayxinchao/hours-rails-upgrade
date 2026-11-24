@@ -1,0 +1,26 @@
+-# Replaced in place by TimersController's Turbo Stream responses.
+- notice = local_assigns[:notice]
+- alert = local_assigns[:alert]
+#timer.timer-panel{ data: { turbo: "true" } }
+  - if notice.present? || alert.present?
+    %p{ class: alert.present? ? "timer-message timer-message--alert" : "timer-message" }= alert.presence || notice
+  - if timer
+    .timer-running
+      .timer-clock{ data: { controller: "timer", timer_started_at_value: timer.started_at.iso8601 } }
+        %span.timer-dot
+        %strong{ data: { timer_target: "display" } } 0:00:00
+      .timer-details
+        %strong= timer.project.name
+        = "· #{timer.category.name}"
+        - if timer.description.present?
+          %span.timer-description= timer.description
+      .timer-actions
+        = button_to t("timers.stop"), stop_timer_path, class: "button", form: { data: { turbo: "true" } }
+        = button_to t("timers.discard"), timer_path, method: :delete, class: "button timer-discard",
+          form: { data: { turbo: "true", turbo_confirm: t("timers.confirm_discard") } }
+  - else
+    = form_with model: Timer.new, url: timer_path, class: "timer-form", data: { turbo: "true" } do |f|
+      = f.collection_select :project_id, Project.unarchived.by_name, :id, :name, { prompt: t("entries.index.project") }, required: true, id: "timer_project_id", "aria-label": t("entries.index.project")
+      = f.collection_select :category_id, Category.by_name, :id, :name, { prompt: t("entries.index.category") }, required: true, id: "timer_category_id", "aria-label": t("entries.index.category")
+      = f.text_field :description, id: "timer_description", placeholder: t("timers.description_placeholder"), "aria-label": t("entries.index.description")
+      = f.submit t("timers.start"), class: "button"

@@ -6,6 +6,7 @@
     %title= [(content_for(:page_title) || title), t("titles.application")].compact.uniq.join(" | ")
     = stylesheet_link_tag :application, :media => 'all'
     = csrf_meta_tags
+    = javascript_importmap_tags "hotwire"
     %meta{:content => "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no", :name => "viewport"}/
     %meta{:content => "yes", :name => "apple-mobile-web-app-capable"}/
     %meta{:content => "black", :name => "apple-mobile-web-app-status-bar-style"}/

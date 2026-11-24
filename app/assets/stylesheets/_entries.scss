@@ -223,3 +223,18 @@
     text-align: right;
   }
 }
+
+// Inline editing on "My Entries" (phase 2)
+.inline-entry-form {
+  display: grid;
+  grid-template-columns: 9em 1fr 5em 1fr 2fr;
+  gap: 8px;
+  align-items: center;
+
+  input, select { margin: 0; }
+  .inline-entry-errors, .inline-entry-actions { grid-column: 1 / -1; }
+  .inline-entry-errors { margin: 0; color: #a12a1b; }
+  .inline-entry-actions { display: flex; gap: 12px; align-items: center; }
+
+  @media (max-width: 700px) { grid-template-columns: 1fr 1fr; }
+}

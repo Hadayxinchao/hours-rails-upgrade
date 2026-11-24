@@ -44,7 +44,10 @@ class AuditChange
     property.camelize.constantize
   end
 
+  # Decimal columns (hours) are stored in the audit as BigDecimal, whose
+  # to_s is "0.15e1"; show 1.5 instead.
   def find_association(id)
+    return HoursValue.normalize(id) if id.is_a?(BigDecimal)
     return id unless association?
     return NilAssociation.new unless id
 

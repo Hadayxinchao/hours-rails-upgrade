@@ -63,7 +63,7 @@ class Project < ApplicationRecord
   end
 
   def total_hours_spent
-    @total_hours_spent ||= hours.sum(:value)
+    @total_hours_spent ||= HoursValue.normalize(hours.sum(:value))
   end
 
   def label
@@ -82,7 +82,7 @@ class Project < ApplicationRecord
   private
 
   def hours_per_category
-    @hours_per_category ||= hours.group(:category_id).sum(:value)
+    @hours_per_category ||= HoursValue.normalize_hash(hours.group(:category_id).sum(:value))
   end
 
   def slug_source

@@ -1,0 +1,20 @@
+-# One hours entry. Its id is the Turbo Stream target for inline editing.
+- localized_cache cache_key_for_current_user(entry) do
+  %tr.info-row{ id: dom_id(entry) }
+    %td.date
+      %div.weekday= t("weekdays." + entry.date.strftime('%A').downcase)
+      = I18n.l (entry.date)
+    %td.project= link_to entry.project.name, entry.project
+    %td.hours.center= entry.value
+    %td.category.hide-for-mobile
+      %span.color{:style => "background-color:#{entry.category.name.pastel_color};"}
+      = entry.category.name
+    %td.description.hide-for-mobile
+      = sanitize autolink_tags(entry.description)
+    - if editable
+      %td.actions.right
+        = link_to t('entries.index.edit'), edit_hour_path(entry), data: { turbo: "true", turbo_stream: true }
+        |
+        = link_to t('entries.index.delete'), hour_path(entry), method: :delete, class: "destroy", data: { confirm: t(:confirm) }
+    %td.changes.right.hide-for-mobile
+      = link_to t('entries.index.changes'), hour_audits_path(entry) if entry.audits.count > 1

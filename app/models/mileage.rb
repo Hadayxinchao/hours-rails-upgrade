@@ -13,6 +13,8 @@
 #
 
 class Mileage < Entry
+  validates :value, numericality: { greater_than: 0, only_integer: true }
+
   scope :by_last_created_at, -> { order("created_at DESC") }
   scope :by_date, -> { order("date DESC") }
   scope :billable, -> { where("billable").joins(:project) }

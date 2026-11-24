@@ -1,0 +1,7 @@
+-# Navbar badge for a running timer, visible on every page.
+%li#timer-indicator
+  - if timer
+    = link_to root_path, class: "timer-indicator", title: "#{t('timers.running')}: #{timer.project.name}",
+      data: { controller: "timer", timer_started_at_value: timer.started_at.iso8601 } do
+      %span.timer-dot
+      %span{ data: { timer_target: "display" } } 0:00:00

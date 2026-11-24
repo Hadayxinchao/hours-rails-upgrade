@@ -17,18 +17,25 @@ test:
   <<: *default
   database: hours_test
 
-# Solid Cache and Solid Queue get their own databases (Rails 8 layout). They
-# default to the primary server so a single-database deploy still works, and
-# live outside Apartment's tenant schemas either way (separate connection pools).
+# Solid Cache, Solid Queue and Solid Cable get their own databases (Rails 8
+# layout), outside Apartment's tenant schemas. Without explicit URLs they use
+# <primary>_cache / _queue / _cable on the primary's server. They must be
+# separate databases: pointed at the primary itself, db:prepare sees an
+# existing database, only migrates, and never loads their schemas.
+<% derive = ->(suffix) { ENV["DATABASE_URL"].to_s.sub(%r{/([^/?]+)(\?|\z)}, "/\\1_#{suffix}\\2") } %>
 production:
   primary: &primary_production
     <<: *default
     url: <%= ENV["DATABASE_URL"] %>
   cache:
     <<: *primary_production
-    url: <%= ENV.fetch("CACHE_DATABASE_URL") { ENV["DATABASE_URL"] } %>
+    url: <%= ENV.fetch("CACHE_DATABASE_URL") { derive.("cache") } %>
     migrations_paths: db/cache_migrate
   queue:
     <<: *primary_production
-    url: <%= ENV.fetch("QUEUE_DATABASE_URL") { ENV["DATABASE_URL"] } %>
+    url: <%= ENV.fetch("QUEUE_DATABASE_URL") { derive.("queue") } %>
     migrations_paths: db/queue_migrate
+  cable:
+    <<: *primary_production
+    url: <%= ENV.fetch("CABLE_DATABASE_URL") { derive.("cable") } %>
+    migrations_paths: db/cable_migrate

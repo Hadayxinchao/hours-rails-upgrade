@@ -8,7 +8,7 @@ tag per step, and every decision written down.
 | Step | Tag | What | Why |
 |---|---|---|---|
 | 1 | `phase2/1-invoicing` | Hourly and mileage rates, invoices built from billable entries, PDF, draft → sent → paid / void, entries locked once invoiced | The app tracks billable hours but stops before the part that makes money |
-| 2 | `phase2/2-timer` | Hotwire: running timer, inline entry editing, live feed; replace select2 and jQuery plugins | A modern Rails 8 front end; timers are table stakes for time trackers |
+| 2 | `phase2/2-timer` | Hotwire: running timer, quarter-hour entries, inline entry editing, live feed (replacing select2/jQuery plugins deferred, see LOG) | A modern Rails 8 front end; timers are table stakes for time trackers |
 | 3 | `phase2/3-budget-alerts` | Budgets in money as well as hours, email alerts at 80% / 100% via Solid Queue | Overruns are found when invoicing, which is too late |
 | 4 | `phase2/4-api` | REST API with personal tokens, OpenAPI docs, webhooks, a Slack `/hours` command | Integrations are what keep a tool in daily use |
 | 5 | `phase2/5-ai` | Natural-language time entry, weekly client summary (Claude API), with human confirmation | Faster entry and better client communication, with a narrow scope |

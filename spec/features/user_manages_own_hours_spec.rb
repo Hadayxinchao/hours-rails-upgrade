@@ -65,7 +65,7 @@ feature "User manages their own hours" do
   scenario "edits an entry" do
     new_project = create(:project)
     new_category = create(:category)
-    new_value = rand(1..100)
+    new_value = rand(1..24)
     new_date = Date.current.strftime("%d/%m/%Y")
     new_description = "did some awesome #uxdesign"
     edit_entry(new_project, new_category, new_value, new_date, new_description)

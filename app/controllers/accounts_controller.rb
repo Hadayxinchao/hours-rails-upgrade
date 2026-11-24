@@ -27,8 +27,12 @@ class AccountsController < ApplicationController
       return redirect_to edit_account_path, alert: t("demo.disabled")
     end
 
+    subdomain = current_subdomain
     current_account.destroy
-    Apartment::Tenant.drop(current_subdomain)
+    Apartment::Tenant.drop(subdomain)
+    # The user's schema is gone, so render the goodbye page signed out (the
+    # navbar would otherwise query tables that no longer exist).
+    sign_out current_user
   end
 
   private

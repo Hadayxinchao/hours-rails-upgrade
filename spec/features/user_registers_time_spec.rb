@@ -25,13 +25,24 @@ feature "User registers time" do
       expect(page).to have_content I18n.t("entry_created.hours")
     end
 
-    scenario "validates that hours are integers" do
+    scenario "tracks quarter hours" do
       within ".tab-header-and-content-left" do
-        fill_in_entry(hours: 0.5)
+        fill_in_entry(hours: 0.75)
         click_button I18n.t("helpers.submit.create")
       end
+
+      expect(page).to have_content I18n.t("entry_created.hours")
+      expect(Hour.last.value).to eq 0.75
+    end
+
+    scenario "rejects hours that are not in quarter-hour steps" do
+      within ".tab-header-and-content-left" do
+        fill_in_entry(hours: 1.1)
+        click_button I18n.t("helpers.submit.create")
+      end
+
       expect(page).to have_content(
-        I18n.t("activerecord.attributes.hour.value") + " must be an integer"
+        "#{I18n.t('activerecord.attributes.hour.value')} #{I18n.t('errors.messages.quarter_hours')}"
       )
     end
   end

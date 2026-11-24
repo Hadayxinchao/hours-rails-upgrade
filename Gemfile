@@ -34,6 +34,10 @@ gem "redcarpet"
 gem "dartsass-sprockets" # Dart Sass in Sprockets; replaces sass-rails / Ruby Sass
 gem "select2-rails"
 gem "simple_form"
+gem "importmap-rails", "~> 2.1" # ES modules for Hotwire, served by Sprockets
+gem "turbo-rails", "~> 2.0"
+gem "stimulus-rails", "~> 1.3"
+gem "solid_cable", "~> 3.0" # Action Cable over Postgres (no Redis)
 gem "prawn", "~> 2.5" # invoice PDFs (pure Ruby)
 gem "prawn-table", "~> 0.2"
 gem "sprockets-rails", "~>3.0"

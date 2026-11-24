@@ -8,7 +8,7 @@ feature "User Report" do
   end
 
   scenario "views all entries" do
-    hour = create(:hour, value: 1000)
+    hour = create(:hour, value: "13.75")
     mileage = create(:mileage, value: 2000)
     visit reports_url(subdomain: subdomain)
 

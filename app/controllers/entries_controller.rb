@@ -45,7 +45,11 @@ class EntriesController < ApplicationController
     params[:controller]
   end
 
+  # The classic forms send dd/mm/yyyy; date inputs (inline editing) send ISO.
   def parsed_date(entry_type)
-    Date.strptime(params[entry_type][:date], DATE_FORMAT)
+    value = params[entry_type][:date].to_s
+    return Date.iso8601(value) if value.match?(/\A\d{4}-\d{2}-\d{2}\z/)
+
+    Date.strptime(value, DATE_FORMAT)
   end
 end

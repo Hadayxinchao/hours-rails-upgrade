@@ -6,7 +6,7 @@
 #  project_id  :integer          not null
 #  category_id :integer          not null
 #  user_id     :integer          not null
-#  value       :integer          not null
+#  value       :decimal(6, 2)    not null
 #  date        :date             not null
 #  created_at  :datetime
 #  updated_at  :datetime
@@ -23,6 +23,13 @@ class Hour < Entry
   has_many :tags, through: :taggings
 
   validates :category, presence: true
+  validates :value, numericality: { greater_than: 0, less_than_or_equal_to: 24 }
+  validate :value_in_quarter_hours
+
+  # 3 rather than 3.0; see HoursValue.
+  def value
+    HoursValue.normalize(super)
+  end
 
   accepts_nested_attributes_for :taggings
 
@@ -34,6 +41,7 @@ class Hour < Entry
   }
 
   before_save :set_tags_from_description
+  after_create_commit -> { BroadcastActivityJob.perform_later(self) }
 
   def tag_list
     tags.map(&:name).join(", ")
@@ -44,6 +52,13 @@ class Hour < Entry
   end
 
   private
+
+  def value_in_quarter_hours
+    raw = read_attribute(:value)
+    return if raw.nil? || (raw % HoursValue::STEP).zero?
+
+    errors.add(:value, :quarter_hours)
+  end
 
   def set_tags_from_description
     tagnames = extract_hashtags(description)

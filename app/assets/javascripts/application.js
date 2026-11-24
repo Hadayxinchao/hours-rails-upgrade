@@ -10,7 +10,6 @@
 //= require i18n
 //= require billables
 //= require date-formatter
-//= require feed
 //= require_tree .
 
 

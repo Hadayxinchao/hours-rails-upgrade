@@ -2,8 +2,13 @@ development:
   adapter: async
 
 test:
-  adapter: async
+  adapter: test
 
+# Solid Cable: Action Cable over Postgres, so there is still no Redis to run.
 production:
-  adapter: redis
-  url: redis://localhost:6379/1
+  adapter: solid_cable
+  connects_to:
+    database:
+      writing: cable
+  polling_interval: 0.1.seconds
+  message_retention: 1.day

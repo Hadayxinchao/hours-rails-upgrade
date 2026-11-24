@@ -1,7 +1,7 @@
 feature "User views Entry Audit Trail" do
   let(:subdomain) { generate(:subdomain) }
   let(:user) { build(:user) }
-  let(:hours_entry) { create(:hour, user: user, value: 100) }
+  let(:hours_entry) { create(:hour, user: user, value: 10) }
   let(:mileages_entry) { create(:mileage, user: user, value: 300) }
 
   before(:each) do
@@ -22,7 +22,14 @@ feature "User views Entry Audit Trail" do
 
     visit hour_audits_url(hours_entry, subdomain: subdomain)
     last_change = page.find(".audit:last-child")
-    expect(last_change.find(".changes")).to have_content changed_value(100, 200)
+    expect(last_change.find(".changes")).to have_content changed_value(10, 7.5)
+  end
+
+  scenario "shows changes made outside a request as System" do
+    hours_entry.update_attribute(:value, 4)
+
+    visit hour_audits_url(hours_entry, subdomain: subdomain)
+    expect(page).to have_content(I18n.t("audits.system"))
   end
 
   scenario "links to mileages audit path" do
@@ -50,9 +57,13 @@ feature "User views Entry Audit Trail" do
       value2.to_s
   end
 
+  # The entry is created before as_user, not lazily inside it: creating an
+  # hour runs the feed broadcast job inline in feature specs, and running a
+  # job resets CurrentAttributes, where audited keeps the acting user.
   def update_hours_entry
+    hours_entry
     Audited.audit_class.as_user(user) do
-      hours_entry.update_attribute(:value, 200)
+      hours_entry.update_attribute(:value, 7.5)
     end
   end
 
